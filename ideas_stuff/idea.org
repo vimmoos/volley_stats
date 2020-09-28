@@ -1,0 +1,73 @@
+* VOLLEY STATS
+** LOGIN
+*** code from
+    loginpage from
+    https://www.listendata.com/2019/06/how-to-add-login-page-in-shiny-r.html
+    maybe it's better to use Docker-based shinyproxy package which
+    maybe are better in terms of security cause right now the password
+    are same as plain text in the code ...
+
+*** Permission
+    login for now there are 2 permission level
+    + basic
+      it should be allowed only to see stats
+    + advanced
+      it should be able to see and upload stats but not to modify it
+    + admin
+      not here yet, but it should be able to see, collect and modify data and stats
+      also could be usefull to see the trafic and other stats of the website
+** TODO modules
+   in general the website will be based on modules which can be add
+   and deleted (something like nestor which i really like!) (save the
+   configuration of it based on the user so that
+   next time the same user login the configuration should be restored)
+   + Attack (wp)
+   + Serve (wp)
+   + Pass (wp)
+   + Ball distribution (TODO)
+   + Block (TODO)
+
+
+** stats
+*** Player
+    + select player
+    + select game
+    + modules
+      + Attack
+      + Serve
+      + Pass
+      + Ball distribution
+      + Block
+
+*** Team
+    + select position
+    + select game
+    + modules
+      same as in Player (?)
+
+** trends
+   i need temporal information to do that !!
+   in general this section should highlight the progression of the
+   team/player across time on each of the statistics that we are
+   keeping track of
+*** Player
+    + same selection possibility as in Player stats
+    + module  TODO
+
+*** Team
+    + same selection possibility as in Team stats
+    +  module TODO
+
+** Data
+   we have to add :
+   + Setter
+     would be great to know who was the setter in a specific set
+   + date for each game
+   + Team
+   + Position
+     this can be done as a separate file with maps player to
+     position
+   + Block
+     maybe we can also add block error? which  I think is the only
+     thing that is missing in order to have some kind of share
+     structure between attack serve and block
