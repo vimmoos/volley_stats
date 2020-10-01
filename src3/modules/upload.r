@@ -12,11 +12,9 @@ f_upload_game <- function(id,accept)
         solidHeader =  TRUE,
         collapsible =  TRUE,
         useSweetAlert ("dark"),
-        module_selector (0) (id),
         airDatepickerInput (paste0("game_date",id),
                             label = "Select the date of the game",
                             autoClose = TRUE,
-                            maxDate = Sys.Date (),
                             startView= Sys.Date (),
                             addon = 'none'
                             ),
@@ -28,11 +26,13 @@ f_upload_game <- function(id,accept)
                                         placeholder = "Type an Opponent",
                                         preload = TRUE,
                                         onInitialize = I('function() { this.setValue(""); }'),
-                                        createFilter = "[a-z]+")
-                        ),
-        fileInput(paste0("file",id),
-                  "Choose the csv file of the game", width = "30%",
-                  multiple = FALSE, accept = accept),
+                                        createFilter = "[a-z]+")),
+        fluidRow (
+            column (fileInput(paste0("file",id),
+                              "Choose the csv file of the game", width = "60%",
+                              multiple = FALSE, accept = accept),width=8),
+            column (downloadButton (paste0 ("template_g",id),
+                                    "Download Template"),width=4)),
 
         ## dataTableOutput (paste0 ("contents",id)),
         actionButton (paste0 ("upload_l",id),
@@ -40,7 +40,7 @@ f_upload_game <- function(id,accept)
                       icon = icon ("upload")),
         actionButton (paste0 ("upload_d",id),
                       label = "Upload to database",
-                      icon = icon ("upload"))
+                      icon = icon ("globe"))
 
 
     )
@@ -49,49 +49,61 @@ f_upload_game <- function(id,accept)
 b_upload_game <- function(input,output,session,id,data)
 {
 
-    sel <- module_selector (TRUE) (input,output,session,quote (Team),data,
-        "Select a Team",id,filter=FALSE)
-
     observe(updateSelectizeInput (session,paste0 ("opponent",id),
                           selected = NULL,
                           choices = levels(unique(data()$Opponent)),
                           server=TRUE))
-    ## output [[paste0 ("selecto",id)]] <- renderUI ( selectizeInput
-    ##     (paste0("opponent",id), choices = , ) )
-
     observe_confirmation (session,input [[paste0 ("upload_d",id)]],
-                          is.null (sel ()$selected) |
                           is.null (input [[paste0 ("game_date",id)]]) |
                           is.null (input [[paste0 ("opponent",id)]]) |
                           is.null (input [[paste0 ("file",id)]]),
                           paste0  ("confirm_d",id), "Are you sure to upload in the database?",
-                          tags$ul (tags$li (paste ("Team:",sel ()$selected)),
-                                   tags$li (paste ("Date:",input [[paste0 ("game_date",id)]])),
+                          tags$ul (tags$li (paste ("Date:",input [[paste0 ("game_date",id)]])),
                                    tags$li (paste ("Opponent:",input [[paste0 ("opponent",id)]])),
                                    tags$li (paste ("File:",input [[paste0 ("file",id)]]$name))))
 
 
     observe_confirmation (session,input [[paste0 ("upload_l",id)]],
-                          is.null (sel ()$selected) |
                           is.null (input [[paste0 ("game_date",id)]]) |
                           is.null (input [[paste0 ("opponent",id)]]) |
                           is.null (input [[paste0 ("file",id)]]),
                           paste0  ("confirm_l",id), "Are you sure to upload locally?",
-                          tags$ul (tags$li (paste ("Team:",sel ()$selected)),
-                                   tags$li (paste ("Date:",input [[paste0 ("game_date",id)]])),
+                          tags$ul (tags$li (paste ("Date:",input [[paste0 ("game_date",id)]])),
                                    tags$li (paste ("Opponent:",input [[paste0 ("opponent",id)]])),
                                    tags$li (paste ("File:",input [[paste0 ("file",id)]]$name))))
-    output [[paste0 ("contents",id)]] <-
-        renderDataTable({
-            req(input [[paste0 ("file",id) ]])
 
-            tryCatch({df<-
-                          read.csv(input [[paste0 ("file",id)]]$datapath)},
-            error = function(e)
-                stop(safeError(e)))
-            print (df)
-            df},options = c (scrollX = "true", scrollY= "true",
-                             scrollCollapse = "true")
+    games <- reactive ({
+        req(input [[paste0 ("file",id) ]])
+        tryCatch(read.csv(input [[paste0 ("file",id)]]$datapath),
+                 error = function(e)
+                     stop(safeError(e)))})
+
+    observeEvent (input [[paste0 ("confirm_d",id)]],
+                  if (input [[paste0 ("confirm_d",id)]])
+                      with_db ({
+                          add <- cadd_games (games ())
+                          if (add$bool){
+                              add$fun (opponent = input [[paste0 ("opponent",id)]],
+                                       date = input [[paste0 ("game_date",id)]])
+                              showNotification (
+                                  paste (input [[paste0 ("file",id)]]$name,
+                                         "Uploaded successfully"),
+                                  type ="message")}
+                          else sendSweetAlert (
+                                   session,title = "File format Error",
+                                   text = "There are probably typos,Please check the template!",
+                                   type = "error")}))
+
+    output [[paste0 ("template_g",id)]] <-
+        downloadHandler (filename = function () "template_game.csv",
+                         content = function (file)
+                             write.csv (games_template,file,row.names=FALSE))
+
+
+    output [[paste0 ("contents",id)]] <-
+        renderDataTable(games (),
+                        options = c (scrollX = "true", scrollY= "true",
+                                     scrollCollapse = "true",editable = T)
             )
     }
 

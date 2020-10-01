@@ -6,7 +6,7 @@ perc_se <- function (data,regexp,debug=FALSE)
         print (regexp)}
     tmp <-filter (data, metric %like% regexp)
     paste0 (round (tmp$m*100),"% ± ",
-            round (tmp$se *100,digits = 1))
+            round (tmp$se *100,digits = 0))
 }
 
 

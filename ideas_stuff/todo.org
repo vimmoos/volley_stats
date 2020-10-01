@@ -10,7 +10,8 @@
     CLOSED: [2020-09-24 Thu 17:07]
 *** DONE [#B] colors
     CLOSED: [2020-09-23 Wed 18:07]
-** INPROGRESS [#A] Upload
+** DONE [#A] Upload
+   CLOSED: [2020-10-01 Thu 01:31]
 ** DONE [#B] Selector
    CLOSED: [2020-09-23 Wed 19:46]
 ** DONE [#B] Mode Selector
@@ -23,7 +24,11 @@
 ** TODO [#B] Trends
 ** TODO General Stats
 
-* TODO add database
+* DONE add database
+  CLOSED: [2020-10-01 Thu 01:32]
+** TODO add data locally
+** DONE add data remotely
+   CLOSED: [2020-10-01 Thu 01:31]
 
 * DONE fix team
   CLOSED: [2020-09-25 Fri 02:51]
