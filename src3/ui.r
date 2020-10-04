@@ -9,6 +9,7 @@ source("./modules/mode_sel.r")
 source("./modules/dropmenu.r")
 source ("./modules/upload.r")
 source ("./modules/create_team.r")
+source ("./modules/create_players.r")
 
 
 OT_tab <-
@@ -44,8 +45,10 @@ Upload_tab <-
         tabName = "upload",
         fluidRow (
             module_upload_game (0) ("upload",c ("csv",".csv","comma-separated-values")),
+            module_create_players (0) ("create_players",c ("csv",".csv","comma-separated-values")),
+
+        ),
             module_create_team (0) ("create_team",c ("csv",".csv","comma-separated-values"))
-        )
 
     )
 

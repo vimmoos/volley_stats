@@ -6,6 +6,7 @@ source("./modules/mode_sel.r")
 source("./modules/dropmenu.r")
 source ("./modules/upload.r")
 source ("./modules/create_team.r")
+source ("./modules/create_players.r")
 source ("./modules/db_driver.r")
 
 source ("./utils.r")
@@ -40,7 +41,7 @@ filter_server <- function (data) filter(data,!Position %in% c("Libero"))
 
 read_data <- function ()
 {
-    position <- get_csv("~/volley_stats/data/position.csv")
+    position <- get_csv("~/volley_stats/data/h1_position.csv")
 
     data <- get_csv("~/volley_stats/data/first_match.csv") %>% left_join(position)
 
@@ -136,6 +137,7 @@ module_server <- function(input,output,session)
 
     module_upload_game (TRUE) (input,output,session,"upload",datas$raw_data)
     module_create_team (TRUE) (input,output,session,"create_team")
+    module_create_players (TRUE) (input,output,session,"create_players")
 
     binds_filter (dist,filt_dist (),metric,
                   list (c ("attack","att*"),

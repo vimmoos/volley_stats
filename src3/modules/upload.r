@@ -19,6 +19,7 @@ f_upload_game <- function(id,accept)
                             addon = 'none'
                             ),
         selectizeInput (paste0 ("opponent",id),choices = NULL,
+                        selected =NULL,
                         label = "Select/create the Opponent",
                         options = list (create = TRUE,
                                         createOnBlur = TRUE,
@@ -71,6 +72,7 @@ b_upload_game <- function(input,output,session,id,data)
                           tags$ul (tags$li (paste ("Date:",input [[paste0 ("game_date",id)]])),
                                    tags$li (paste ("Opponent:",input [[paste0 ("opponent",id)]])),
                                    tags$li (paste ("File:",input [[paste0 ("file",id)]]$name))))
+
 
     games <- reactive ({
         req(input [[paste0 ("file",id) ]])
