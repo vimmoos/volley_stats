@@ -36,6 +36,7 @@
 * TODO fix startup bugs
 * TODO add picture of players
 * TODO checking file in upload and raise errors
+* TODO sanity check for bobby tables
 * TODO decide how to display settings
   dropdown, dropdownbutton or vanilla shiny
 

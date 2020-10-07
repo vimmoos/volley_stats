@@ -9,6 +9,5 @@ run <- function()
     shinyApp(module_ui,module_server)
 
 }
-
 ## runApp(list(ui = module_ui, server = module_server),launch.browser = TRUE,
 ##            host = getOption("shiny.host","192.168.1.109"))

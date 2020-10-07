@@ -59,34 +59,37 @@ module_backend (
              filter (value != get_in ("team_name")))$value))
 
 
+        observe (print (get_in ("team_ass")))
+        observe (print (get_in ("team_name")))
 
-        observe_confirmation (
-            session,
-            what =get_in("upload_game"),
-            bool_err =
-                isnull (get_in("game_date"),get_in("team_name"),
-                        get_in("team_ass"),get_in("op_name"),
-                        get_in("op_ass"),get_in("file")),
-            conf_id = "confirm_game",
-            conf_title = "Are you sure to upload locally?",
-            conf_text = tags$ul (tags$li (paste ("Date:",get_in("game_date"))),
-                                   tags$li (paste ("Home Team:",get_in(
-                                                                    "team_name"))),
-                                   tags$li (paste ("Away Team:",get_in (
-                                                                    "op_name"))),
-                                 tags$li (paste ("File:",get_in("file")$name))),
+        upload_confirmation (
+                              session,
+                              what =get_in("upload_game"),
+                              bool_err =
+                              isnull (get_in("game_date"),get_in("team_name"),
+                                            get_in("team_ass"),get_in("op_name"),
+                                            get_in("op_ass"),get_in("file")),
+                              conf_id = "confirm_game",
+                              conf_title = "Are you sure to upload locally?",
+                              conf_text = tags$ul (tags$li (paste ("Date:",get_in("game_date"))),
+                                                        tags$li (paste ("Home Team:",get_in(
+                                                                                            "team_name"))),
+                                                        tags$li (paste ("Away Team:",get_in (
+                                                                                             "op_name"))),
+                                                        tags$li (paste ("File:",get_in("file")$name))),
             body ={
-                team_id <- get_team_id (assoc = get_in ("team_ass"),
-                                        name = get_in ("team_name"))
-                op_id <- get_team_id (assoc = get_in ("op_ass"),
-                                      name = get_in ("op_name"))
-                game_id <- add_game (opp_id = op_id,
-                                     team_id = team_id,
-                                     date = get_in ("game_date"))
-                add_stats (df = games (),
-                                opp_id = op_id,
-                                team_id = team_id,
-                                game_id = game_id)})
+                                     team_id <- get_team_id (assoc = get_in ("team_ass"),
+                                                                     name = get_in ("team_name"))
+                                     op_id <- get_team_id (assoc = get_in ("op_ass"),
+                                                                   name = get_in ("op_name"))
+                                     game_id <- add_game (opp_id = op_id,
+                                                                   team_id = team_id,
+                                                                   date = get_in ("game_date"))
+                                     print (game_id)
+                                     add_stats (df = games (),
+                                                     opp_id = op_id,
+                                                     team_id = team_id,
+                                                     game_id = game_id)})
 
 
 

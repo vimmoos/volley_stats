@@ -10,7 +10,7 @@ perc_se <- function (data,regexp,debug=FALSE)
 }
 
 isnull <- function (...)
-    reduce (list (...),function (acc,x) is.null (acc) | is.null (x))
+    is.null (reduce (list (...),function (acc,x) is.null (acc) | is.null (x)))
 
 
 get_in <- defmacro(string,expr = input[[paste0(string,id)]])
