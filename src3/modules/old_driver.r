@@ -1,9 +1,15 @@
 library(RMariaDB)
 library(DBI)
 library (gtools)
+library (tidyverse)
 
 R_CON_DB <- NULL
 
+dhost <- "192.168.1.109"
+
+ddatabase <- "volley"
+
+dpassword <- "volleyMaria"
 
 
 

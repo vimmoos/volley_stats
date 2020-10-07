@@ -34,8 +34,13 @@
   CLOSED: [2020-09-25 Fri 02:51]
 * TODO add maybe a compare player tab
 * TODO fix startup bugs
+* TODO add picture of players
+* TODO checking file in upload and raise errors
 * TODO decide how to display settings
   dropdown, dropdownbutton or vanilla shiny
+
+* TODO add login and admin stuff
+  accept upload request
 
 * BACKEND
 ** TODO [#C] add module configuration (like nestor)

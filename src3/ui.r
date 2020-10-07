@@ -44,11 +44,10 @@ Upload_tab <-
     tabItem (
         tabName = "upload",
         fluidRow (
-            module_upload_game (0) ("upload",c ("csv",".csv","comma-separated-values")),
-            module_create_players (0) ("create_players",c ("csv",".csv","comma-separated-values")),
-
+            get_frontend (create_players,list ("create_players")),
+            get_frontend (create_game,list ("create_game")),
+            get_frontend(create_team,list ("create_team"))
         ),
-            module_create_team (0) ("create_team",c ("csv",".csv","comma-separated-values"))
 
     )
 
