@@ -1,6 +1,7 @@
 library(RMariaDB)
 library(DBI)
 library (gtools)
+source("./modules/sql_interface.r")
 
 R_CON_DB <- NULL
 
@@ -15,69 +16,80 @@ with_db <- defmacro (body,expr={
     body
     bye ()})
 
+ddl_map = list(players='players_table',
+               teams='teams_table',
+               games='games_table',
+               stats='stats_table')
+
+ddl_source = lapply(FUN=load_sql_module,ddl_map)
 
 
-
-
+# DONE
 create_players_table <- function (con=R_CON_DB)
-    dbExecute (con,
-               paste("CREATE TABLE Players (",
-                     "Player_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
-                     "Name VARCHAR(100) NOT NULL,",
-                     "Position VARCHAR(100) NOT NULL,",
-                     "Team_id MEDIUMINT NOT NULL,",
-                     "CONSTRAINT fk_team_id ",
-                     "FOREIGN KEY (Team_id) REFERENCES Teams (Team_id)",
-                     "ON DELETE CASCADE", "ON UPDATE RESTRICT);",
-                     sep="\n"))
+    dbExecute (con, ddl_source$players
+               ## paste("CREATE TABLE Players (",
+               ##       "Player_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
+               ##       "Name VARCHAR(100) NOT NULL,",
+               ##       "Position VARCHAR(100) NOT NULL,",
+               ##       "Team_id MEDIUMINT NOT NULL,",
+               ##       "CONSTRAINT fk_team_id ",
+               ##       "FOREIGN KEY (Team_id) REFERENCES Teams (Team_id)",
+               ##       "ON DELETE CASCADE", "ON UPDATE RESTRICT);",
+               ##       sep="\n")
+               )
 
+# DONE
 create_teams_table <- function (con=R_CON_DB)
-    dbExecute (con,
-               paste ("CREATE TABLE Teams (",
-                      "Team_id MEDIUMINT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
-                      "Name VARCHAR(100) NOT NULL,", "Gender BOOL,",
-                      "Association VARCHAR(100) NOT NULL,",
-                      "CONSTRAINT unique_teams UNIQUE KEY (Name,Association,Gender));",
-                      sep="\n"))
+    dbExecute (con, ddl_source$teams
+               ## paste ("CREATE TABLE Teams (",
+               ##        "Team_id MEDIUMINT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
+               ##        "Name VARCHAR(100) NOT NULL,", "Gender BOOL,",
+               ##        "Association VARCHAR(100) NOT NULL,",
+               ##        "CONSTRAINT unique_teams UNIQUE KEY (Name,Association,Gender));",
+               ##        sep="\n")
+               )
 
 
+# DONE
 create_games_table <- function (con=R_CON_DB)
-    dbExecute (con,
-               paste ("CREATE TABLE Games (",
-                      "Game_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
-                      "Opp_id MEDIUMINT NOT NULL,",
-                      "Team_id MEDIUMINT NOT NULL,",
-                      "Date DATE NOT NULL,",
-                      "CONSTRAINT fk_opp_id FOREIGN KEY (Opp_id) REFERENCES Teams (Team_id)",
-                      "ON DELETE CASCADE","ON UPDATE RESTRICT,",
-                      "CONSTRAINT fk_t_id FOREIGN KEY (Team_id) REFERENCES Teams (Team_id)",
-                      "ON DELETE CASCADE","ON UPDATE RESTRICT);",
-                      sep = "\n"))
+    dbExecute (con, ddl_sources$games
+               ## paste ("CREATE TABLE Games (",
+               ##        "Game_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,",
+               ##        "Opp_id MEDIUMINT NOT NULL,",
+               ##        "Team_id MEDIUMINT NOT NULL,",
+               ##        "Date DATE NOT NULL,",
+               ##        "CONSTRAINT fk_opp_id FOREIGN KEY (Opp_id) REFERENCES Teams (Team_id)",
+               ##        "ON DELETE CASCADE","ON UPDATE RESTRICT,",
+               ##        "CONSTRAINT fk_t_id FOREIGN KEY (Team_id) REFERENCES Teams (Team_id)",
+               ##        "ON DELETE CASCADE","ON UPDATE RESTRICT);",
+               ##        sep = "\n")
+               )
 
-
+# DONE
 create_stats_table <- function (con=R_CON_DB)
-    dbExecute (con,
-               paste ("CREATE TABLE Stats(", "Game_id INT NOT NULL,",
-                      "Player_id INT NOT NULL,",
-                      "Set_ TINYINT(2) NOT NULL,",
-                      "Attack_n TINYINT(2) ZEROFILL,",
-                      "Attack_k TINYINT(2) ZEROFILL,",
-                      "Attack_e TINYINT(2) ZEROFILL,",
-                      "Block_t TINYINT(2) ZEROFILL,",
-                      "Block_k TINYINT(2) ZEROFILL,",
-                      "ServeR_er TINYINT(2) ZEROFILL,",
-                      "ServeR_p TINYINT(2) ZEROFILL,",
-                      "ServeR_g TINYINT(2) ZEROFILL,",
-                      "ServeR_ex TINYINT(2) ZEROFILL,",
-                      "Serve_e TINYINT(2) ZEROFILL,",
-                      "Serve_a TINYINT(2) ZEROFILL,",
-                      "Serve_n TINYINT(2) ZEROFILL,",
-                      "PRIMARY KEY (Game_id,Player_id,Set_),",
-                      "CONSTRAINT fk_game_id FOREIGN KEY (Game_id) REFERENCES Games (Game_id)",
-                      "ON DELETE CASCADE","ON UPDATE RESTRICT,",
-                      "CONSTRAINT fk_player_id FOREIGN KEY (Player_id) REFERENCES Players (Player_id)",
-                      "ON DELETE CASCADE","ON UPDATE RESTRICT);",
-                      sep="\n"))
+    dbExecute (con, ddl_sources$stats
+               ## paste ("CREATE TABLE Stats(", "Game_id INT NOT NULL,",
+               ##        "Player_id INT NOT NULL,",
+               ##        "Set_ TINYINT(2) NOT NULL,",
+               ##        "Attack_n TINYINT(2) ZEROFILL,",
+               ##        "Attack_k TINYINT(2) ZEROFILL,",
+               ##        "Attack_e TINYINT(2) ZEROFILL,",
+               ##        "Block_t TINYINT(2) ZEROFILL,",
+               ##        "Block_k TINYINT(2) ZEROFILL,",
+               ##        "ServeR_er TINYINT(2) ZEROFILL,",
+               ##        "ServeR_p TINYINT(2) ZEROFILL,",
+               ##        "ServeR_g TINYINT(2) ZEROFILL,",
+               ##        "ServeR_ex TINYINT(2) ZEROFILL,",
+               ##        "Serve_e TINYINT(2) ZEROFILL,",
+               ##        "Serve_a TINYINT(2) ZEROFILL,",
+               ##        "Serve_n TINYINT(2) ZEROFILL,",
+               ##        "PRIMARY KEY (Game_id,Player_id,Set_),",
+               ##        "CONSTRAINT fk_game_id FOREIGN KEY (Game_id) REFERENCES Games (Game_id)",
+               ##        "ON DELETE CASCADE","ON UPDATE RESTRICT,",
+               ##        "CONSTRAINT fk_player_id FOREIGN KEY (Player_id) REFERENCES Players (Player_id)",
+               ##        "ON DELETE CASCADE","ON UPDATE RESTRICT);",
+               ##        sep="\n")
+               )
 
 
 sselect <- function (columns,from,where="")
