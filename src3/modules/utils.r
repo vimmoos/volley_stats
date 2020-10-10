@@ -13,6 +13,14 @@ isnull <- function (...)
     is.null (reduce (list (...),function (acc,x) is.null (acc) | is.null (x)))
 
 
+macro_defn <-
+    defmacro(name,alist,body,
+             expr = do.call("<-",
+                            list(name,
+                                 eval(call("function",as.pairlist(alist),
+                                           quote(body)),
+                                           parent.frame()))))
+
 get_in <- defmacro(string,expr = input[[paste0(string,id)]])
 
 bind_output <-
@@ -120,23 +128,19 @@ module_frontend <-
     defmacro (
         name,args=alist (),title,status,width,body,
         expr =
-            do.call("<-",
-                    list(paste0("f_",quote (name)),
-                         eval (call (
-                             "function",
-                             as.pairlist (append (alist(id=),args)),
-                             quote (
-                                 do.call (
-                                     "box",append (
-                                               list (id = id,
-                                                     width = width,
-                                                     title = tags$p (title,style = "font-size:300%;"),
-                                                     status = status,
-                                                     solidHeader =TRUE,
-                                                     collapsible = TRUE,
-                                                     useSweetAlert ("dark")),
-                                               body)))),
-                             parent.frame ()))))
+            macro_defn (
+                paste0("f_",quote (name)),
+                append (alist(id=),args),
+                do.call (
+                    "box",append (
+                              list (id = id,
+                                    width = width,
+                                    title = tags$p (title,style = "font-size:300%;"),
+                                    status = status,
+                                    solidHeader =TRUE,
+                                    collapsible = TRUE,
+                                    useSweetAlert ("dark")),
+                              body))))
 
 
 
@@ -144,13 +148,10 @@ module_backend <-
     defmacro (
         name,args=alist (),body,
         expr =
-            do.call("<-",
-                    list(paste0("b_",quote (name)),
-                         eval (call (
-                             "function",
-                             as.pairlist (append (args,alist(input=,output=,session=,id=))),
-                             quote ({body})),
-                             parent.frame ()))))
+            macro_defn (
+                paste0("b_",quote (name)),
+                append (alist(input=,output=,session=,id=),args)
+                body))
 
 get_frontend <-
     defmacro (
@@ -186,3 +187,50 @@ back_selector <-
                               selected =selected,
                               choices = choices,
                               server=TRUE))
+
+execute_sql <-
+    defmacro(
+    name,sql_string,
+    expr =
+        macro_defn (
+            name,
+            alist(con=R_CON_DB),
+            dbExecute (con,sql_string)))
+
+create_table <- defmacro (
+    name,sql_string,
+    expr = execute_sql (paste0("create_",quote (name),"_table"),sql_string))
+
+
+
+preproc <- defmacro (group,expr = get_tbl (table = "Stats") %>%
+                     group_by (Player_id,group)%>%
+                     q_sum %>%
+                     q_prob %>%
+                     select (-Game_id) %>%
+                     group_by (Player_id) %>%
+                     select (-Set_))
+
+qview_mean <-
+    defmacro (
+        name,group,
+        expr =
+            macro_defn(
+                paste0("qview_",quote (name),"_mean"),
+                alist(),
+                q_mean (preproc (group))))
+
+qview_se <-
+    defmacro (
+        name,group,
+        expr =
+            macro_defn (
+                paste0("qview_",quote (name),"_se"),
+                alist (),
+                q_se (preproc (group))))
+
+create_view <- defmacro (
+    name_view,query,
+    expr = execute_sql (
+        paste0("create_",quote (name_view),"_view"),
+        paste0("CREATE VIEW ",quote (name_view)," AS ",query)))

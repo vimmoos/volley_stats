@@ -7,6 +7,7 @@ source("./modules/pass.r")
 source("./modules/selector.r")
 source("./modules/mode_sel.r")
 source("./modules/dropmenu.r")
+source("./modules/utils.r")
 source ("./modules/upload.r")
 source ("./modules/create_team.r")
 source ("./modules/create_players.r")
@@ -67,22 +68,21 @@ module_body <-
                                      bottom = 10
                                      )
                           ),
-        ## tabItem (tabName = "ptrends",
-        ##                    h2 ("Player Stats"),
-        ##                    box (title = "Collector",
-        ##                                 actionButton ("plus","dio"),
-        ##                                 actionButton ("minus","porco"))),
         tabItem (tabName = "ttrends",
                            h2 ("Team Stats"),
                            box (title = "moc plot"),
-                           plotOutput("mtcars")))
+                 plotOutput("mtcars")))
+id <- "sidebar"
 module_sidebar <-
     sidebarMenu (
-                 menuItem ("Overall Player",tabName = "pstats", icon = icon ("chart-bar")),
-                 menuItem ("Overall Team",tabName = "tstats", icon = icon ("volleyball-ball")),
-                 menuItem ("Player Trends",tabName = "ptrends", icon = icon ("chart-bar")),
-                 menuItem ("upload",tabName = "upload", icon = icon ("chart-bar")),
-                 menuItem ("Team Trends",tabName = "ttrends", icon = icon ("volleyball-ball")))
+        menuItem ("Overall Player",tabName = "pstats", icon = icon ("chart-bar")),
+        menuItem ("Overall Team",tabName = "tstats", icon = icon ("volleyball-ball")),
+        menuItem ("Player Trends",tabName = "ptrends", icon = icon ("chart-bar")),
+        menuItem ("upload",tabName = "upload", icon = icon ("chart-bar")),
+        menuItem ("Team Trends",tabName = "ttrends", icon = icon ("volleyball-ball")),
+        front_selector ("select_ass","Choose an Association"),
+        front_selector ("select_team","Choose a Team")
+        )
 ## '.nav-tabs-custom .nav-tabs li.active {
 ##     border-top-color: #d73925;
 ## }"'

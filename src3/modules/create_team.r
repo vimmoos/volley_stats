@@ -2,29 +2,29 @@ library(shiny)
 library(shinydashboard)
 source ("./modules/selector.r")
 source ("./modules/utils.r")
-source ("./modules/db_driver2.0.r")
+source ("./modules/db_driver.r")
 
 module_frontend (
-    create_team,
-    title = "Create Team",
-    status = "success",
-    width = 4,
-    body=list (
-        front_selector ("association","Select/create the Association",
-                        create=TRUE),
+                 create_team,
+                 title = "Create Team",
+                 status = "success",
+                 width = 4,
+                 body=list (
+                            front_selector ("association","Select/create the Association",
+                                            create=TRUE),
 
-        radioButtons (paste0 ("gender",id),
-                      label =  "Gender",
-                      choices = list ("Female" = 0,"Male" = 1)),
+                            radioButtons (paste0 ("gender",id),
+                                                 label =  "Gender",
+                                                 choices = list ("Female" = 0,"Male" = 1)),
 
-        textInput(paste0 ("name_t",id),
-                  label = "insert the name of the team",
-                  value = NULL,
-                  placeholder = "H1"),
+                            textInput(paste0 ("name_t",id),
+                                             label = "insert the name of the team",
+                                             value = NULL,
+                                             placeholder = "H1"),
 
-        actionButton (paste0 ("create_team",id),
-                      label = "Create Team",
-                      icon = icon ("upload"))))
+                            actionButton (paste0 ("create_team",id),
+                                                 label = "Create Team",
+                                                 icon = icon ("upload"))))
 
 module_backend (
     create_team,

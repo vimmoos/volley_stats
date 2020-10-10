@@ -7,107 +7,25 @@ source("./modules/dropmenu.r")
 source ("./modules/upload.r")
 source ("./modules/create_team.r")
 source ("./modules/create_players.r")
-## source ("./modules/db_driver.r")
+source("./modules/utils.r")
+source ("./modules/db_driver.r")
 
 source ("./utils.r")
 library (tidyverse)
 library(data.table)
 
-get_csv <- function(path) read.csv(path) %>%
-                              as_tibble %>%
-                              mutate_if(is.character,as.factor)
-
-
-check_row <- function(data)
-    data[,!names(data) %in% c("Set")]  %>%
-        apply(1,FUN=
-                    function(row)
-                        all(as.numeric(row) == 0 | is.na(as.numeric(row))))
-
-
-m <-function(x) mean(x[!is.nan(x)])
-
-s <- function(x) sd(x[!is.nan(x)])
-
-se <- function(x) sd(x[!is.nan(x)])/sqrt(length(x[!is.nan(x)]))
-
-
-filter_attacker <- function (data) filter(data,!Position %in% c("Libero","Setter"))
-
-filter_passer <- function (data) filter(data,!Position %in% c("Middle_Blocker","Setter","Opposite"))
-
-filter_server <- function (data) filter(data,!Position %in% c("Libero"))
-
-
-read_data <- function ()
-{
-    position <- get_csv("~/volley_stats/data/h1_position.csv")
-
-    data <- get_csv("~/volley_stats/data/first_match.csv") %>% left_join(position)
-
-    data[!check_row(data),]
-
-}
-
-
-pre_proc_data <- function (data)
-{
-
-    data %>%
-        mutate(Set=1)%>%
-        group_by(Team,Player,Opponent,Position,Set)%>%
-        mutate(ServeR_tot = ServeR_P_Err + ServeR_P_P + ServeR_G_P + ServeR_E_P,
-               Serve_tot = Serve_error + Serve_Ace + Serve_null)
-
-}
-
-sum_set <- function (data)
-{
-    data %>% summarise_each(funs=function(x)
-        ifelse(is.factor(x),x,sum(x)))}
-
-
-
-prob_data <- function (data)
-{
-    data %>%
-        group_by (Player,Opponent,Position,Set) %>%
-        summarise(
-                  att_k = Attack_kills/Attack_n,
-                  att_e = Attack_error/Attack_n,
-                  att_n = (Attack_n - (Attack_kills+Attack_error) ) /Attack_n,
-                  sr_er = ServeR_P_Err / ServeR_tot,
-                  sr_p = ServeR_P_P / ServeR_tot,
-                  sr_g = ServeR_G_P / ServeR_tot,
-                  sr_ex = ServeR_E_P / ServeR_tot,
-                  serve_k = Serve_Ace/Serve_tot,
-                  serve_e = Serve_error/Serve_tot,
-                  serve_n = Serve_null/Serve_tot) %>%
-        gather ("metric","val",4:14)
-}
-
-mean_data <- function (data)
-{
-    data [,!names (data) %in% c ("Opponent")] %>%
-        group_by (Player,Position,metric) %>%
-        summarise_each (lst (m,se))
-}
-
-mean_team_data <- function (data)
-{
-    data [,!names (data) %in% c ("Opponent","Player")] %>%
-        group_by (Position,metric) %>%
-        summarise_each (lst (m,se))
-}
-
-
-
-
-
-
 
 module_server <- function(input,output,session)
 {
+    id <- "sidebar"
+
+    observe (back_selector ("select_ass",with_db (team_with_stats ()$Association)))
+    observe (back_selector ("select_team",with_db ((team_with_stats () %>%
+                                                    filter (Association == get_in ("select_ass")))$Name)))
+
+    ## all_data <- with_db (gather_all_data (prob_all_data))
+
+
     raw <- pre_proc_data(read_data())
 
     datas <- reactiveValues()
@@ -118,14 +36,17 @@ module_server <- function(input,output,session)
     datas$mean <- reactive (mean_data (datas$prob ()))
     datas$mean_team <- reactive (mean_team_data (datas$prob ()))
 
+
+    observe (print (datas$prob))
+    observe (print (datas$mean))
+    observe (print (datas$mean_team))
+
+
+
+
     opt <- module_dropmenu(TRUE)(input,output, session,
         quote(Player),datas$mean ,"Select Player","player",TRUE)
 
-
-    observe(print(opt$selected ()$selected))
-    observe(print(datas$raw_data()))
-    ## observe(print(opt$selected ()$selected))
-    ## observe(print(opt$selected ()$selected))
 
 
     filt_dist <- reactive( if (opt$dist())

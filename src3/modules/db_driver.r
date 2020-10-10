@@ -11,18 +11,56 @@ dhost <- "192.168.1.109"
 ddatabase <- "volley"
 
 dpassword <- Sys.getenv ("VOLLEY_DB_PASS")
-dpassword <- "volleyMaria"
 
 startup  <- function (host=dhost,database=ddatabase,password=dpassword)
     R_CON_DB <<- dbConnect(MariaDB(),host=host,dbname= database,password= password)
 
 bye <- function(con=R_CON_DB) dbDisconnect(con)
 
+
 with_db <- defmacro (body,expr={
     startup ()
     res <- body
     bye ()
     res})
+
+get_tbl <- function(con = R_CON_DB,table) tbl(con,table)
+
+bench_query <- function(query,n = 100)
+{
+    bench_fun <- function () for (i  in c (1:n))
+                                 query %>% collect ()
+    startup ()
+    print (system.time (result <- bench_fun ()))
+    bye ()
+}
+
+
+
+ddl_map = list(players='players_table',
+               teams='teams_table',
+               games='games_table',
+               stats='stats_table')
+
+ddl_source = lapply(FUN=load_sql_module,ddl_map)
+
+
+create_table (players,ddl_source$players)
+
+create_table (games,ddl_source$games)
+
+create_table (teams,ddl_source$teams)
+
+create_table (stats,ddl_source$stats)
+
+
+create_all_table <- function (con = R_CON_DB)
+{
+    create_teams_table ()
+    create_players_table()
+    create_games_table ()
+    create_stats_table ()
+}
 
 
 add_team <- function (con=R_CON_DB,name,gender,association)
@@ -76,13 +114,7 @@ add_stats <- function (con=R_CON_DB,df,opp_id,team_id,game_id)
                sqlAppendTable (con,"Stats",
                                sub_player_id (df,opp_id,team_id) %>%
                                mutate (Game_id = game_id)))
-    }
-ddl_map = list(players='players_table',
-               teams='teams_table',
-               games='games_table',
-               stats='stats_table')
-
-ddl_source = lapply(FUN=load_sql_module,ddl_map)
+}
 
 add_player <- function (con=R_CON_DB,name,pos,team_id)
     dbExecute (con,
@@ -98,18 +130,8 @@ add_players <- function (con=R_CON_DB,poss,team_id)
                                as.data.frame))
 
 
-create_players_table <- function (con=R_CON_DB)
-    dbExecute (con, ddl_source$players)
-
-create_teams_table <- function (con=R_CON_DB)
-    dbExecute (con, ddl_source$teams)
 
 
-create_games_table <- function (con=R_CON_DB)
-    dbExecute (con, ddl_source$games)
-
-create_stats_table <- function (con=R_CON_DB)
-    dbExecute (con, ddl_source$stats)
 
 
 sselect <- function (columns,from,where="")
@@ -122,35 +144,32 @@ ssel_unique <- function (columns,from,where="")
     sselect (paste ("DISTINCT",columns),from,where)
 
 get_all_associations <- function (con = R_CON_DB)
-    dbGetQuery (con,ssel_unique ("Association","Teams"))$Association
+(get_tbl (con,"Teams") %>%
+ select (Association) %>%
+ distinct %>%
+ collect)$Association
 
 
 
 get_team_name <- function (con = R_CON_DB,assoc = 'Kroton')
-    dbGetQuery(con,
-               sselect ("Name","Teams",
-                        paste0("Association = '",assoc,"'")))$Name
+(get_tbl (con,"Teams") %>%
+ filter (Association == assoc) %>%
+ select (Name)%>% collect)$Name
 
-get_team_id <- function (con = R_CON_DB,assoc = 'Kroton',name = "D1")
-{
-    print ("gesu")
-    print (sselect ("Team_id","Teams",
-                         paste0 ("Association = '",assoc,"' ",
-                                 "AND Name = '",name,"'")))
-    res <- dbGetQuery (con,
-                sselect ("Team_id","Teams",
-                         paste0 ("Association = '",assoc,"' ",
-                                 "AND Name = '",name,"'")))$Team_id
-    print ("dio")
-    res
-    }
+get_team_id <-
+    function (con = R_CON_DB,assoc = 'Kroton',name = "D1")
+(get_tbl (con,"Teams") %>%
+ filter (Association == assoc & Name == name) %>%
+ select (Team_id) %>%
+ collect)$Team_id
 
 
 get_all_games_id <- function (con =R_CON_DB,team_id = 2)
-    dbGetQuery (con,
-                sselect ("Game_id","Games",
-                         paste("Team_id =",team_id,
-                               "OR Opp_id =",team_id)))
+    get_tbl (con,"Games") %>%
+        filter (Team_id == team_id | Opp_id == team_id) %>%
+        select (Game_id) %>%
+        collect
+
 
 get_all_opp_id <- function (con =R_CON_DB,team_id =2)
     dbGetQuery (con,
@@ -207,3 +226,78 @@ games_template <-
               Serve_e= c (as.integer(0)),
               Block_t= c (as.integer(0)),
               Block_k= c (as.integer(0))))
+
+
+
+
+team_with_stats <- function (con = R_CON_DB)
+    get_tbl (con,table ="Teams") %>%
+        inner_join (get_tbl (con,table ="Players") %>%
+                    select (Team_id,Player_id)) %>%
+        semi_join (get_tbl (con,table ="Stats")) %>%
+        select (Name,Association) %>%
+        distinct %>% collect
+
+mutate_set <- function (tbl)
+    tbl %>%
+        mutate (Set_ = 1)
+
+q_prob <- function (tbl)
+    tbl %>%
+        mutate(ServeR_tot = ServeR_er + ServeR_p + ServeR_g + ServeR_ex,
+               Serve_tot = Serve_e + Serve_a + Serve_n) %>%
+        group_by (Player_id,Set_,Game_id) %>%
+        summarise(
+            att_k = Attack_k/Attack_n,
+            att_e = Attack_e/Attack_n,
+            att_n = (Attack_n - (Attack_k+Attack_e) ) /Attack_n,
+            sr_er = ServeR_er / ServeR_tot,
+            sr_p = ServeR_p / ServeR_tot,
+            sr_g = ServeR_g / ServeR_tot,
+            sr_ex = ServeR_ex / ServeR_tot,
+            serve_k = Serve_a/Serve_tot,
+            serve_e = Serve_e/Serve_tot,
+            serve_n = Serve_n/Serve_tot)
+
+q_mean <- function (tbl)
+    tbl %>%
+        summarise (
+            att_k = round(mean (att_k),2),
+            att_e = round(mean(att_e),2),
+            att_n = round(mean(att_n),2),
+            sr_er = round(mean(sr_er),2),
+            sr_p = round(mean(sr_p),2),
+            sr_g = round(mean(sr_g),2),
+            sr_ex = round(mean(sr_ex),2),
+            serve_k = round(mean(serve_k),2),
+            serve_e = round(mean(serve_e),2),
+            serve_n = round(mean(serve_n),2))
+
+q_sum <- function (tbl)
+    tbl %>%
+        summarise_each (sum)
+
+q_se <- function (tbl)
+    tbl %>%
+        summarise (
+            att_k = round(sd (att_k) / sqrt (count (att_k)),2),
+            att_e = round(sd (att_e) / sqrt (count (att_e)),2),
+            att_n = round(sd (att_n) / sqrt (count (att_n)),2),
+            sr_er = round(sd (sr_er) / sqrt (count (sr_er)),2),
+            sr_p = round(sd (sr_p) / sqrt (count (sr_p)),2),
+            sr_g = round(sd (sr_g) / sqrt (count (sr_g)),2),
+            sr_ex = round(sd (sr_ex) / sqrt (count (sr_ex)),2),
+            serve_k = round(sd (serve_k) / sqrt (count (serve_k)),2),
+            serve_e = round(sd (serve_e) / sqrt (count (serve_e)),2),
+            serve_n = round(sd (serve_n) / sqrt (count (serve_n)),2))
+
+
+qview_mean (set,Set_)
+qview_mean (game,Game_id)
+qview_se (set,Set_)
+qview_se (game,Game_id)
+
+create_view (set_mean,toString ( dbplyr::sql_render (qview_set_mean ()) ))
+create_view (game_mean,toString ( dbplyr::sql_render (qview_game_mean ()) ))
+create_view (set_se,toString ( dbplyr::sql_render (qview_set_se ()) ))
+create_view (game_se,toString ( dbplyr::sql_render (qview_game_se ()) ))
