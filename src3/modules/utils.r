@@ -233,4 +233,4 @@ create_view <- defmacro (
     name_view,query,
     expr = execute_sql (
         paste0("create_",quote (name_view),"_view"),
-        paste0("CREATE VIEW ",quote (name_view)," AS ",query)))
+        paste0("CREATE VIEW ",quote (name_view)," AS ",toString (dbplyr::sql_render (query)))))
