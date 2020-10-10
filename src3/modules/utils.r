@@ -19,24 +19,32 @@ macro_defn <-
                             list(name,
                                  eval(call("function",as.pairlist(alist),
                                            quote(body)),
-                                           parent.frame()))))
+                                      parent.frame()))))
 
-get_in <- defmacro(string,expr = input[[paste0(string,id)]])
+ID <- defmacro (symb,expr = paste0(quote (symb),id))
+
+get_in <- defmacro(symb,expr = input[[ID (symb)]])
 
 bind_output <-
     defmacro (
-        data,name,
-        expr=
-            output [[paste0 (name,id)]] <- renderUI(
-                perc_se (data ,name)))
+        name, body,
+        expr = output [[ID (name)]] <- body)
 
-bind_outputs <-
-    defmacro (
-        data,names,
-        expr= eval (bquote (
-        {..(map (names,function (x)
-            bquote (bind_output (data,. (x)))))
-        },splice=TRUE)))
+
+## bind_output <-
+##     defmacro (
+##         data,name,
+##         expr=
+##             output [[paste0 (name,id)]] <- renderUI(
+##                 perc_se (data ,name)))
+
+## bind_outputs <-
+##     defmacro (
+##         data,names,
+##         expr= eval (bquote (
+##         {..(map (names,function (x)
+##             bquote (bind_output (data,. (x)))))
+##         },splice=TRUE)))
 
 
 
@@ -123,8 +131,17 @@ upload_confirmation <-
                         "Uploaded successfully",
                         type="message")}))
 
-
 module_frontend <-
+    defmacro (
+        name,args=alist (),body,
+        expr =
+            macro_defn (
+                paste0("f_",quote (name)),
+                append (alist(id=),args),
+                body))
+
+
+module_frontend_box <-
     defmacro (
         name,args=alist (),title,status,width,body,
         expr =
@@ -150,7 +167,7 @@ module_backend <-
         expr =
             macro_defn (
                 paste0("b_",quote (name)),
-                append (alist(input=,output=,session=,id=),args)
+                append (alist(input=,output=,session=,id=),args),
                 body))
 
 get_frontend <-
@@ -161,7 +178,9 @@ get_frontend <-
 get_backend <-
     defmacro (
         name,args,
-        expr = do.call (paste0 ("b_",quote (name)),args))
+        expr = do.call (paste0 ("b_",quote (name)),append (alist (input = input,
+                                                                  output = output,
+                                                                  session = session), args)))
 
 front_selector <-
     defmacro (
@@ -171,7 +190,7 @@ front_selector <-
         allowEmptyOption = FALSE,
         preload = TRUE,
         createFilter = "[a-z]+",
-        expr = selectizeInput (paste0 (name,id),
+        expr = selectizeInput (paste0 (quote (name),id),
                                choices = NULL, selected =NULL,
                                label = title,
                                options = list (create = create,
@@ -183,7 +202,7 @@ back_selector <-
         name,
         choices,
         selected = NULL,
-        expr =  updateSelectizeInput (session,paste0 (name,id),
+        expr =  updateSelectizeInput (session,paste0 (quote (name),id),
                               selected =selected,
                               choices = choices,
                               server=TRUE))
@@ -210,6 +229,14 @@ preproc <- defmacro (group,expr = get_tbl (table = "Stats") %>%
                      select (-Game_id) %>%
                      group_by (Player_id) %>%
                      select (-Set_))
+
+qview_global <-
+    defmacro (
+        name,group,
+        expr = macro_defn (
+            paste0 ("qview_",quote (name),"_global"),
+            alist (),
+            preproc (group)))
 
 qview_mean <-
     defmacro (

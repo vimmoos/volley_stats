@@ -3,7 +3,7 @@ library(shinydashboard)
 source ("./modules/selector.r")
 source ("./modules/utils.r")
 
-module_frontend (
+module_frontend_box (
     create_players,
     args = alist (accept=c ("csv",".csv","comma-separated-values")),
     title = "Create Players",
@@ -31,7 +31,7 @@ module_frontend (
                       value = paste0("multiple",id),
                       fluidRow (column (fileInput(paste0("position_f",id),
                                                   "Choose the csv file for the positions",
-                                                  width = "60%", multiple = FALSE,
+                                                  width = "70%", multiple = FALSE,
                                                   accept = accept),width=8),
                                 column (downloadButton (paste0 ("template_p",id),
                                                         "Download Template"),

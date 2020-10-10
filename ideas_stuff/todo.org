@@ -37,8 +37,20 @@
 * TODO add picture of players
 * TODO checking file in upload and raise errors
 * TODO sanity check for bobby tables
-* TODO decide how to display settings
+* DONE decide how to display settings
+  CLOSED: [2020-10-10 Sat 17:45]
   dropdown, dropdownbutton or vanilla shiny
+* DONE add sql views
+  CLOSED: [2020-10-10 Sat 17:45]
+* INPROGRESS use data from sql
+* DONE combine views at application layer
+  CLOSED: [2020-10-10 Sat 19:09]
+* INPROGRESS fix bug reactive data
+* TODO add notification when database change
+
+
+* TODO continue to integrate database in application
+* TODO benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
 
 * TODO add login and admin stuff
   accept upload request

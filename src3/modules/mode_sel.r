@@ -2,16 +2,13 @@ library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
 
-f_mode_sel <- function(id,title,status="primary",inline=FALSE)
-{
-    materialSwitch(inputId = paste0("switch",id),label = title,
-                   status = status,inline=inline)
-}
 
-b_mode_sel <- function(input,output,session,id)
-{
-    reactive (input [[paste0 ("switch",id)]])
+module_frontend(
+    name = mode_sel,
+    args = alist(title=,status="primary",inline = FALSE),
+    body =  materialSwitch(inputId = ID (switch),label = title,
+                                     status = status,inline=inline))
 
-}
-
-module_mode_sel <- function (borf) if (borf) b_mode_sel else f_mode_sel
+module_backend (
+    name = mode_sel,
+    body = reactive (get_in (switch)))

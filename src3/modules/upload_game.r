@@ -3,7 +3,7 @@ library(shinydashboard)
 source ("./modules/selector.r")
 source ("./modules/utils.r")
 
-module_frontend (
+module_frontend_box (
     create_game,
     args = alist (accept=c ("csv",".csv","comma-separated-values")),
     title = "Upload Game",

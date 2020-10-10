@@ -104,3 +104,13 @@ mean_team_data <- function (data)
         group_by (Position,metric) %>%
         summarise_each (lst (m,se))
 }
+
+gather_view <- function (con = R_CON_DB,tbl_name)
+    get_tbl (con,table=tbl_name) %>%
+        collect %>%
+        gather("metric","val",-Player_id)
+
+join_views_ms <- function(con=R_CON_DB,mean_name,se_name)
+    gather_view(con,mean_name) %>%
+        inner_join(gather_view(con,se_name) %>%
+                   rename (se = val))

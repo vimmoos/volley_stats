@@ -4,7 +4,7 @@ source ("./modules/selector.r")
 source ("./modules/utils.r")
 source ("./modules/db_driver.r")
 
-module_frontend (
+module_frontend_box (
                  create_team,
                  title = "Create Team",
                  status = "success",

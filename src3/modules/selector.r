@@ -1,37 +1,32 @@
 library(shiny)
 library(shinydashboard)
-
-f_selector <- function(id)
-{
-    uiOutput(paste0("selection",id))
-}
-
-b_selector <- function(input,output,session,filter_group,data,title,id,filter=TRUE)
-{
-    options <- reactive(levels(unique(data()[[paste0(filter_group,"")]])))
-    default_val <- reactive(sample (options(),1))
-    observe(print(data()))
-
-    output [[paste0 ("selection",id)]] <- renderUI(
-        selectInput(paste0 ("selector",id),title,
-                    selected = default_val() ,
-                    choices =  options()))
-    reactive ({
-        id <- paste0 ("selector",id)
-        selected <- ifelse (!is.null (input [[id]]),
-                            input [[id]],
-                            default_val())
-        if (filter)
-           list (selected = selected,
-               data = data() %>%
-                   filter(eval(filter_group) == selected) %>%
-                   group_by (eval (filter_group)))
-        else list(selected=selected,data=data())
-    })
+source ("./modules/utils.r")
 
 
 
+module_frontend(
+    name = selector,
+    args = alist(title = ,
+                 create = FALSE,
+                 allowEmptyOption = FALSE,
+                 preload = TRUE,
+                 createFilter = " [a-z]+"),
+    body =
+        front_selector (
+            name = selector,
+            title = title,
+            create = FALSE,
+            allowEmptyOption = allowEmptyOption,
+            preload = preload,
+            createFilter = createFilter))
 
-}
-
-module_selector <- function (borf) if (borf) b_selector else f_selector
+module_backend (
+    name = selector,
+    args = alist (choices = ,
+                  selected = NULL),
+    body ={
+        observe (back_selector (
+            name = selector,
+            choices  = choices (),
+            selected = if (is.null (selected)) first (choices ())else selected))
+        reactive (get_in (selector))})

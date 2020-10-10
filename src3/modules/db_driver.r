@@ -20,7 +20,9 @@ bye <- function(con=R_CON_DB) dbDisconnect(con)
 
 with_db <- defmacro (body,expr={
     startup ()
-    res <- body
+    res <- tryCatch (body,error = function (e){
+        bye ()
+        stop (safeError (e))})
     bye ()
     res})
 
@@ -156,6 +158,11 @@ get_team_name <- function (con = R_CON_DB,assoc = 'Kroton')
  filter (Association == assoc) %>%
  select (Name)%>% collect)$Name
 
+get_teams <- function (con = R_CON_DB,assoc = 'Kroton')
+(get_tbl (con,"Teams") %>%
+ filter (Association == assoc) %>%
+ select (Team_id,Name)%>% collect)
+
 get_team_id <-
     function (con = R_CON_DB,assoc = 'Kroton',name = "D1")
 (get_tbl (con,"Teams") %>%
@@ -235,8 +242,8 @@ team_with_stats <- function (con = R_CON_DB)
         inner_join (get_tbl (con,table ="Players") %>%
                     select (Team_id,Player_id)) %>%
         semi_join (get_tbl (con,table ="Stats")) %>%
-        select (Name,Association) %>%
-        distinct %>% collect
+        select (Team_id,Name,Association) %>%
+        distinct
 
 mutate_set <- function (tbl)
     tbl %>%
@@ -296,8 +303,12 @@ qview_mean (set,Set_)
 qview_mean (game,Game_id)
 qview_se (set,Set_)
 qview_se (game,Game_id)
+qview_global (set,Set_)
+qview_global (game,Game_id)
 
 create_view (set_mean,qview_set_mean ())
 create_view (game_mean,qview_game_mean ())
 create_view (set_se,qview_set_se ())
 create_view (game_se,qview_game_se ())
+create_view (set_global,qview_set_global ())
+create_view (game_global,qview_game_global ())
