@@ -1,13 +1,12 @@
 library (gtools)
 
-perc_se <- function (data,regexp,debug=FALSE)
+perc_se <- function (data,filt)
 {
-    if (debug) {print (data)
-        print (regexp)}
-    tmp <-filter (data, metric %like% regexp)
-    paste0 (round (tmp$m*100),"% ± ",
-            round (tmp$se *100,digits = 0))
+    tmp <- filter (data,metric == filt)
+    paste0 (round (tmp$val*100),"% ±",
+            round (tmp$se *100))
 }
+
 
 isnull <- function (...)
     is.null (reduce (list (...),function (acc,x) is.null (acc) | is.null (x)))
@@ -21,7 +20,7 @@ macro_defn <-
                                            quote(body)),
                                       parent.frame()))))
 
-ID <- defmacro (symb,expr = paste0(quote (symb),id))
+ID <- defmacro (symb,expr =  paste0(quote (symb),id))
 
 get_in <- defmacro(symb,expr = input[[ID (symb)]])
 
@@ -30,21 +29,6 @@ bind_output <-
         name, body,
         expr = output [[ID (name)]] <- body)
 
-
-## bind_output <-
-##     defmacro (
-##         data,name,
-##         expr=
-##             output [[paste0 (name,id)]] <- renderUI(
-##                 perc_se (data ,name)))
-
-## bind_outputs <-
-##     defmacro (
-##         data,names,
-##         expr= eval (bquote (
-##         {..(map (names,function (x)
-##             bquote (bind_output (data,. (x)))))
-##         },splice=TRUE)))
 
 
 
@@ -143,7 +127,8 @@ module_frontend <-
 
 module_frontend_box <-
     defmacro (
-        name,args=alist (),title,status,width,body,
+        name,title,status,body,width=6,args=alist (),
+        solidHeader = TRUE,collapsible = TRUE,
         expr =
             macro_defn (
                 paste0("f_",quote (name)),
@@ -154,8 +139,8 @@ module_frontend_box <-
                                     width = width,
                                     title = tags$p (title,style = "font-size:300%;"),
                                     status = status,
-                                    solidHeader =TRUE,
-                                    collapsible = TRUE,
+                                    solidHeader =solidHeader,
+                                    collapsible = collapsible,
                                     useSweetAlert ("dark")),
                               body))))
 
@@ -206,58 +191,3 @@ back_selector <-
                               selected =selected,
                               choices = choices,
                               server=TRUE))
-
-execute_sql <-
-    defmacro(
-    name,sql_string,
-    expr =
-        macro_defn (
-            name,
-            alist(con=R_CON_DB),
-            dbExecute (con,sql_string)))
-
-create_table <- defmacro (
-    name,sql_string,
-    expr = execute_sql (paste0("create_",quote (name),"_table"),sql_string))
-
-
-
-preproc <- defmacro (group,expr = get_tbl (table = "Stats") %>%
-                     group_by (Player_id,group)%>%
-                     q_sum %>%
-                     q_prob %>%
-                     select (-Game_id) %>%
-                     group_by (Player_id) %>%
-                     select (-Set_))
-
-qview_global <-
-    defmacro (
-        name,group,
-        expr = macro_defn (
-            paste0 ("qview_",quote (name),"_global"),
-            alist (),
-            preproc (group)))
-
-qview_mean <-
-    defmacro (
-        name,group,
-        expr =
-            macro_defn(
-                paste0("qview_",quote (name),"_mean"),
-                alist(),
-                q_mean (preproc (group))))
-
-qview_se <-
-    defmacro (
-        name,group,
-        expr =
-            macro_defn (
-                paste0("qview_",quote (name),"_se"),
-                alist (),
-                q_se (preproc (group))))
-
-create_view <- defmacro (
-    name_view,query,
-    expr = execute_sql (
-        paste0("create_",quote (name_view),"_view"),
-        paste0("CREATE VIEW ",quote (name_view)," AS ",toString (dbplyr::sql_render (query)))))

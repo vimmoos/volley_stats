@@ -3,39 +3,37 @@ library(shinydashboard)
 source ("./modules/utils.r")
 
 
-f_attack <- function(id,height)
-{
-    box (
-        id = id,
-        title=tags$p ("Attack",style= "font-size: 300%;"),
-        status = "danger",
-        solidHeader = TRUE,
-        collapsible = TRUE,
-        fluidRow(
-            valueBox(uiOutput(paste0("att_e",id)),"Error",icon = icon("thumbs-down"),color = "red"),
 
-            valueBox(uiOutput(paste0 ("att_n",id)),"In",icon = icon("thumbs-up"),color = "yellow"),
+module_frontend_box(
+    name = attack,
+    args = alist(plot_height=325),
+    title = "Attack",
+    status = "danger",
+    body = list (
+                 fluidRow(
+                          valueBox(uiOutput(ID (att_e)),"Error",icon = icon("thumbs-down"),color = "red"),
 
-            valueBox(uiOutput(paste0 ("att_k",id)),"Kills",icon = icon("bomb"),color = "green")),
+                          valueBox(uiOutput(ID (att_n)),"In",icon = icon("thumbs-up"),color = "yellow"),
 
-        plotOutput (paste0 ("ball_distribution",id),height = height))
-}
+                          valueBox(uiOutput(ID (att_k)),"Kills",icon = icon("bomb"),color = "green")),
+                 plotOutput (ID (att_graph),height = plot_height)))
 
 
+module_backend(
+    name = attack,
+    args = alist (data=,dist=),
+    body =
+        {
+            att_data <- reactive (lapply (data (),function (x)
+                x %>%
+                filter (metric %like% "att*")))
+            bind_output (att_e,renderUI (perc_se (att_data ()$data,"att_e")))
+            bind_output (att_k,renderUI (perc_se (att_data ()$data,"att_k")))
+            bind_output (att_n,renderUI (perc_se (att_data ()$data,"att_n")))
 
 
-b_attack <- function(input,output,session,data,dist_data,dist,id)
-{
-    bind_outputs (data (),c ("att_e","att_k","att_n"))
-
-
-    output [[paste0 ("ball_distribution",id)]] <-renderPlot(
-        if (dist ())
-            plot_dist (dist_data (),metric,val)
-        else plot_mean(data(),metric,m,se)
-    )
-
-}
-
-
-module_attack <- function(borf)  if (borf) b_attack else f_attack
+            bind_output (att_graph,renderPlot (
+                                       if (dist ())
+                                           plot_dist (att_data ()$global,metric,val)
+                                       else
+                                           plot_mean (att_data ()$data,metric,val,se)))})

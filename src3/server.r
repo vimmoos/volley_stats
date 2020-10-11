@@ -1,51 +1,34 @@
-## source("./modules/attack.r")
-## source("./modules/serve.r")
-## source("./modules/pass.r")
+source("./modules/attack.r")
+source("./modules/serve.r")
+source("./modules/pass.r")
 source("./modules/selector.r")
 source("./modules/mode_sel.r")
 source("./modules/dropmenu.r")
-## source ("./modules/upload_game.r")
-## source ("./modules/create_team.r")
-## source ("./modules/create_players.r")
+source ("./modules/upload_game.r")
+source ("./modules/create_team.r")
+source ("./modules/create_players.r")
 source("./modules/utils.r")
-source ("./modules/db_driver.r")
+source ("./db_driver/driver.r")
 
 source ("./utils.r")
 library (tidyverse)
 library(data.table)
 
-# ugly as fuck but does the job
-get_choices <- function(table)
-{
-    res <- alist ()
-    as_tibble (table) %>%
-        pwalk (function (...){
-            row <- c (...)
-            tmplist <- alist ()
-            tmplist [row [2]] <- as.numeric (row [1])
-            res <<- append (tmplist,res)})
-    res
-}
-
-
-get_all_views <- function (con=R_CON_DB)
-    list (
-        by_set = join_views_ms (mean_name =  "set_mean",se_name = "set_se"),
-          by_game = join_views_ms(mean_name = "game_mean",se_name = "game_se"),
-          set_global = get_tbl (con,table = "set_global") %>% collect,
-          game_global = get_tbl (con,table = "game_global") %>% collect)
-
-
 module_server <- function(input,output,session)
 {
+    filtered_fun_team <- function (x){
+        sel <- opt_team$selected ()
+        if (sel == "All")
+            x %>%
+                select (-Position) %>%
+                summarise_each (partial (mean,na.rm=TRUE))
+        else
+            x %>%
+                filter (Position == sel)}
 
     assoc <- get_backend (selector,
                  alist(id ="select_ass",
                        choices = reactive (with_db ((team_with_stats ()%>% collect) $Association))))
-
-
-    ## observe (print (assoc ()))
-    observe (print (team ()))
 
     team <-
         get_backend (selector,
@@ -57,100 +40,93 @@ module_server <- function(input,output,session)
                                     team_with_stats () %>%
                                     collect %>% filter (Association == assoc ())))})))
 
-    ## data <- with_db (get_all_views ())
 
-    ## all_data <- with_db (gather_all_data (prob_all_data))
-
-
-    ## raw <- pre_proc_data(read_data())
-
-    ## datas <- reactiveValues()
-    ## datas$raw_data <-  reactive( if(opt$game_set())
-    ##                                  sum_set(raw)
-    ##                              else raw)
-    ## datas$prob <- reactive (prob_data (datas$raw_data ()))
-    ## datas$mean <- reactive (mean_data (datas$prob ()))
-    ## datas$mean_team <- reactive (mean_team_data (datas$prob ()))
+    opt <-
+        get_backend (dropmenu,
+                     alist ("player_settings",
+                            choices= reactive ({
+                                req (team ())
+                                get_choices (with_db (
+                                    get_players_nid (team_id =  team ())))})))
 
 
-    ## observe (print (datas$prob))
-    ## observe (print (datas$mean))
-    ## observe (print (datas$mean_team))
+    data <- reactive ({
+        req (team ())
+        with_db (get_all_views (team_id = team ()))})
 
 
-    opt <- get_backend (dropmenu, alist ("player_settings",
-                                         choices= reactive ({
-
-                                             req (team ())
-                                             get_choices (with_db (
-                                                 get_players_nid (team_id =  team ())))
-                                             }
-                                             )))
-
-
-    observe ({print (opt$game_set ())
-        print ("game_set")
-    })
-    observe (print (opt$dist ()))
-    observe (print (opt$selected ()))
+    select_data <- reactive ({
+        if (opt$game_set ())
+            list (data = data ()$by_set,
+                  global = data ()$set_global)
+        else
+            list (data = data ()$by_game,
+                  global = data ()$game_global)})
 
 
-
-    ## filt_dist <- reactive( if (opt$dist())
-    ##                            datas$prob () %>%
-    ##                            filter(Player == opt$selected ()$selected) %>%
-    ##                            group_by(Player))
-
-
-
-    ## get_backend (create_game,list(input,output,session,"create_game"))
-    ## get_backend (create_team,list (input,output,session,"create_team"))
-    ## get_backend (create_players,list (input,output,session,"create_players"))
-
-    ## binds_filter (dist,filt_dist (),metric,
-    ##               list (c ("attack","att*"),
-    ##                     c ("serve","serve*"),
-    ##                     c ("pass","sr")))
-
-    ## binds_filter (data,opt$selected ()$data,metric,
-    ##               list (c ("attack","att*"),
-    ##                     c ("serve","serve*"),
-    ##                     c ("pass","sr")))
-
-    ## module_attack(TRUE) (input,output,session, data$attack,dist$attack,opt$dist,"player")
-
-    ## module_pass (TRUE) (input,output,session, data$pass,dist$pass,opt$dist,"player")
-
-    ## module_serve (TRUE) (input,output,session,data$serve,dist$serve,opt$dist,"player")
-
-    ## opt_team <- module_dropmenu(TRUE)(input,output, session,
-    ##     quote(Position),datas$mean_team ,"Select Position","team",TRUE)
-
-    ## filt_team <- reactive( if (opt_team$dist())
-    ##                            datas$prob () %>%
-    ##                            filter(Position == opt_team$selected ()$selected) %>%
-    ##                            group_by(Position))
+    filtered_data <- reactive ({
+        req (opt$selected ())
+        lapply (select_data (),
+                function (x){
+                    x %>%
+                        filter (Player_id == opt$selected ())})})
 
 
+    get_backend (attack,list ("player",filtered_data,opt$dist))
+    get_backend (pass,list ("player",filtered_data,opt$dist))
+    get_backend (serve,list ("player",filtered_data,opt$dist))
 
 
-    ## binds_filter (team_dist,filt_team (),metric,
-    ##               list (c ("attack","att*"),
-    ##                     c ("serve","serve*"),
-    ##                     c ("pass","sr")))
+    opt_team <- get_backend (dropmenu,
+                             alist ("team_settings",
+                                    choices = reactive (c("Opposite",
+                                                          "Middle_Blocker",
+                                                          "Setter", "Libero",
+                                                          "Outside_Hitter",
+                                                          "All"))))
+    data_team <- reactive (
+        append (
+            lapply (data () [1:2],function (x)
+                x %>%
+                select (-Player_id) %>%
+                group_by (Position,metric) %>%
+                summarise_each (partial (mean,na.rm = TRUE))),
+            lapply (data () [3:4],function (x)
+                x %>%
+                select (-Player_id) %>%
+                group_by (Position,metric,index) %>%
+                summarise_each (partial (mean,na.rm = TRUE)))))
 
-    ## binds_filter (team_data,opt_team$selected ()$data,metric,
-    ##               list (c ("attack","att*"),
-    ##                     c ("serve","serve*"),
-    ##                     c ("pass","sr")))
+    select_data_team <- reactive ({
+        if (opt_team$game_set ())
+            list (data = data_team ()$by_set,
+                  global = data_team ()$set_global)
+        else
+            list (data = data_team ()$by_game,
+                  global = data_team ()$game_global)})
 
-    ## module_attack(TRUE) (input,output,session, team_data$attack,team_dist$attack,opt_team$dist,"team")
+    filtered_data_team <- reactive ({
+        req (opt_team$selected ())
+        list (data =select_data_team ()$data %>%
+                                         group_by (metric) %>%
+                                         filtered_fun_team,
+              global=
+                  select_data_team ()$global %>%
+                                     group_by (metric,index) %>%
+                                     filtered_fun_team)})
 
-    ## module_pass (TRUE) (input,output,session, team_data$pass,team_dist$pass,opt_team$dist,"team")
-
-    ## module_serve (TRUE) (input,output,session,team_data$serve,team_dist$serve,opt_team$dist,"team")
 
 
+    get_backend (attack,list ("team",filtered_data_team,opt_team$dist))
+    get_backend (pass,list ("team",filtered_data_team,opt_team$dist))
+    get_backend (serve,list ("team",filtered_data_team,opt_team$dist))
+
+
+
+
+    get_backend (create_game,list("create_game"))
+    get_backend (create_team,list ("create_team"))
+    get_backend (create_players,list ("create_players"))
 
 
     output$test <- renderUI(selectInput("x","select only charter var",choices = c(1,2,3)))

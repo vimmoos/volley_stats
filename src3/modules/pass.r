@@ -2,47 +2,51 @@ library(shiny)
 library(shinydashboard)
 source ("./modules/utils.r")
 
-f_pass <- function(id,height)
-{
 
-    box (
-        title=tags$p ("Pass",style= "font-size: 300%;"),
-        status = "primary",
-        solidHeader = TRUE,
-        collapsible = TRUE,
+module_frontend_box(
+    name = pass,
+    args = alist(plot_height=325),
+    title = "Pass",
+    status = "primary",
+    body = list (
         fluidRow (
-            valueBox(uiOutput(paste0 ("sr_er",id)),"Error",
+            valueBox(uiOutput(ID (sr_er)),"Error",
                      icon = icon("thumbs-down"),color = "red",width = 3),
 
-            valueBox(uiOutput(paste0 ("sr_p",id)),"Playable",
+            valueBox(uiOutput(ID (sr_p)),"Playable",
                      icon = icon("thumbs-up"),color = "yellow",width = 3),
 
-            valueBox(uiOutput(paste0 ("sr_g",id)),"Good",
+            valueBox(uiOutput(ID (sr_g)),"Good",
                      icon = icon("thumbs-up"),color = "lime",width = 3),
 
-            valueBox(uiOutput(paste0 ("sr_ex",id)),"Excelent",
+            valueBox(uiOutput(ID (sr_ex)),"Excelent",
                      icon = icon("bomb"),color = "green",width = 3)),
 
-        plotOutput (paste0 ("pass_distribution",id),height = height))
-}
-
-b_pass <- function(input,output,session,data,dist_data,dist,id)
-{
-
-    bind_outputs (data (),c ("sr_er","sr_p","sr_g","sr_ex"))
-
-    levels = c ("sr_er","sr_p","sr_g","sr_ex")
-
-    fill = c ("#dd4b39", "#00a65a","#01ff70",
-                                  "#f39c12")
+        plotOutput (ID (pass_graph),height = plot_height)))
 
 
-    output [[paste0 ("pass_distribution",id)]] <- renderPlot(
+module_backend(
+               name = pass,
+               args = alist (data=,dist=),
+               body =
+               {
+                sr_data <- reactive (lapply (data (),function (x)
+                                                  x %>%
+                                                  filter (metric %like% "sr")))
 
-        if (dist ())
-            plot_dist (dist_data (),metric,val,levels=levels,fill=fill)
-        else  plot_mean(data(),metric,m,se,levels=levels,
-                          fill=fill))
-}
+                bind_output (sr_er,renderUI (perc_se (sr_data ()$data,"sr_er")))
+                bind_output (sr_p,renderUI (perc_se (sr_data ()$data,"sr_p")))
+                bind_output (sr_g,renderUI (perc_se (sr_data ()$data,"sr_g")))
+                bind_output (sr_ex,renderUI (perc_se (sr_data ()$data,"sr_ex")))
 
-module_pass <- function (borf) if (borf) b_pass else f_pass
+                levels = c ("sr_er","sr_p","sr_g","sr_ex")
+
+                fill = c ("#dd4b39", "#00a65a","#01ff70",
+                          "#f39c12")
+
+
+                bind_output (pass_graph,renderPlot (
+                                                   if (dist ())
+                                                   plot_dist (sr_data ()$global,metric,val,levels = levels,fill=fill)
+                                                   else
+                                                   plot_mean (sr_data ()$data,metric,val,se,levels = levels, fill=fill)))})

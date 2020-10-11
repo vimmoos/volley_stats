@@ -1,34 +1,45 @@
 library(shiny)
 library(shinydashboard)
 
-f_serve <- function(id,height)
-{
-    box(
-        title=tags$p ("Serve",style= "font-size: 300%;"),
-        status = "info",
-        solidHeader = TRUE,
-        collapsible = TRUE,
+
+
+module_frontend_box(
+    name = serve,
+    args = alist(plot_height=325),
+    title = "Serve",
+    status = "info",
+    body = list (
         fluidRow(
-            valueBox(uiOutput(paste0 ("serve_e",id)),
+            valueBox(uiOutput(ID(serve_e)),
                      "Error",
                      icon = icon("thumbs-down"),color = "red"),
-            valueBox(uiOutput(paste0 ("serve_n",id)),
+            valueBox(uiOutput(ID (serve_n)),
                      "In",icon = icon("thumbs-up"),color = "yellow"),
-            valueBox(uiOutput(paste0 ("serve_k",id)),
+            valueBox(uiOutput(ID (serve_k)),
                      "Ace",icon = icon("bomb"),color = "green")),
-        plotOutput (paste0 ("serve_distribution",id),height = height))
-}
-b_serve <- function(input,output,session,data,dist_data,dist,id)
-{
-    bind_outputs (data (),c ("serve_e","serve_k","serve_n"))
-    levels = c ("serve_e",
-                "serve_n",
-                "serve_k")
+        plotOutput (ID (serve_graph),height = plot_height)))
 
-    output [[paste0 ("serve_distribution",id)]] <- renderPlot(
-        if (dist ())
-            plot_dist (dist_data (),metric,val,levels=levels)
-        else plot_mean(data(),metric,m,se,levels=levels))
-}
 
-module_serve <- function (borf) if (borf) b_serve else f_serve
+module_backend(
+               name = serve,
+               args = alist (data=,dist=),
+               body =
+               {
+                serve_data <- reactive (lapply (data (),function (x)
+                                                     x %>%
+                                                     filter (metric %like% "serve")))
+
+                bind_output (serve_e,renderUI (perc_se (serve_data ()$data,"serve_e")))
+                bind_output (serve_k,renderUI (perc_se (serve_data ()$data,"serve_k")))
+                bind_output (serve_n,renderUI (perc_se (serve_data ()$data,"serve_n")))
+
+
+                levels = c ("serve_e",
+                            "serve_n",
+                            "serve_k")
+
+                bind_output (serve_graph,renderPlot (
+                                                    if (dist ())
+                                                    plot_dist (serve_data ()$global,metric,val,levels = levels)
+                                                    else
+                                                    plot_mean (serve_data ()$data,metric,val,se,levels = levels)))})

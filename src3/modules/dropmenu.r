@@ -43,7 +43,7 @@ module_backend (
 
             bind_output (warning,
                          renderUI (if (dist())
-                                      tags$p ("distribution mode need at least 3 data point for each event",
+                                      tags$p ("distribution mode need at least 3 data point for the given context",
                                               style="color: #dd4b39;")
                                       else tags$p ()))
 

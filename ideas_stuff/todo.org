@@ -42,15 +42,18 @@
   dropdown, dropdownbutton or vanilla shiny
 * DONE add sql views
   CLOSED: [2020-10-10 Sat 17:45]
-* INPROGRESS use data from sql
+* DONE use data from sql
+  CLOSED: [2020-10-11 Sun 23:36]
 * DONE combine views at application layer
   CLOSED: [2020-10-10 Sat 19:09]
-* INPROGRESS fix bug reactive data
+* DONE fix bug reactive data
+  CLOSED: [2020-10-11 Sun 23:36]
 * TODO add notification when database change
 
 
-* TODO continue to integrate database in application
-* TODO benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
+* DONE continue to integrate database in application
+  CLOSED: [2020-10-11 Sun 23:36]
+* HOLD benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
 
 * TODO add login and admin stuff
   accept upload request
