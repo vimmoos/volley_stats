@@ -10,94 +10,95 @@ module_frontend_box (
     status = "warning",
     width = 6,
     body = list (
-        front_selector ("association","Select a Association"),
-        front_selector ("team","Select a team"),
+        get_frontend (selector,alist(ID (association),"Select an Association")),
+        get_frontend(selector,alist(ID (team) ,"Select a Team")),
 
         tabBox (
             width = 12,
-            id = paste0 ("players_tabs",id),
+            id = ID (players_tabs),
             title = "Player Position",
-            selected = paste0 ("multiple",id),
+            selected = ID (multiple) ,
             tabPanel ( "Single",
-                      value = paste0("single",id),
+                      value = ID (single) ,
 
-                      textInput(paste0 ("player_name",id),
+                      textInput(ID (player_name),
                                 label = "insert the name of the player"),
-                      selectInput(paste0 ("player_pos",id),
+                      selectInput(ID (player_pos),
                                   label = "Select the position",
                                   choices = list("Middle_Blocker", "Setter", "Outside_Hitter",
                                                  "Opposite","Libero"))),
             tabPanel ("Multiple",
-                      value = paste0("multiple",id),
-                      fluidRow (column (fileInput(paste0("position_f",id),
+                      value = ID (multiple) ,
+                      fluidRow (column (fileInput(ID (position_f) ,
                                                   "Choose the csv file for the positions",
                                                   width = "70%", multiple = FALSE,
                                                   accept = accept),width=8),
-                                column (downloadButton (paste0 ("template_p",id),
+                                column (downloadButton (ID (template_p),
                                                         "Download Template"),
                                         tags$p (paste ("Please use the same position that are in the template,\n",
                                                        "if there are typos the file will be rejected"),
                                                 style="color: #dd4b39;")
                                        ,width=4)),
-                      dataTableOutput (paste0 ("contents",id)))),
-        actionButton (paste0 ("create_players",id),
+                      dataTableOutput (ID (contents)))),
+        actionButton (ID (create_players),
                       label = "Create Players",
                       icon = icon ("upload"))))
 
 module_backend (
     create_players,
     body={
-        observe(back_selector ("association",
-                               with_db (get_all_associations ())))
+        assoc <- get_backend (selector,alist (ID (association) ,
+                                              choices =  with_db (get_all_associations ())))
 
-        observeEvent (get_in ("association"),
-            back_selector ("team",
-                           with_db (get_team_name(assoc = get_in ("association")))))
+        team <- get_backend (selector,alist (ID (team),
+                                             reactive = TRUE,
+                                             choices = reactive (with_db (get_team_name(assoc = assoc ())))))
 
         upload_confirmation (
             session,
-            what = get_in("create_players"),
-            bool_err = isnull (get_in("team")) |
-                (is.null (get_in("position_f")) &
-                 (is.null (get_in("player_name")) |
-                  get_in ("player_name") == "" |
-                  is.null (get_in("player_pos")))) ,
-            conf_id = "confirm_players",
+            what = get_in(create_players),
+            bool_err = isnull (get_in(team)) |
+                (is.null (get_in(position_f)) &
+                 (is.null (get_in(player_name)) |
+                  get_in (player_name) == "" |
+                  is.null (get_in(player_pos)))) ,
+            conf_id = confirm_players,
             conf_title = "Are you sure to upload?",
-            conf_text = tags$ul(tags$li (paste ("Team:",get_in ("team"))),
-                                if (get_in("players_tabs") == paste0 ("single",id))
+            conf_text = tags$ul(tags$li (paste ("Team:",get_in (team))),
+                                if (get_in(players_tabs) == ID (single))
                                     tags$div(tags$li (paste ("Player:",
-                                                             get_in ("player_name"))),
-                                             tags$li (paste ("Position:",
-                                                             get_in ("player_pos"))))
+                                                             get_in(player_name))),
+                                                  tags$li (paste ("Position:",
+                                                                  get_in(player_pos))))
                                 else
                                     tags$li (paste ("File:",
-                                                    get_in("position_f")$name))),
+                                                    get_in(position_f)$name))),
             body = {
-                t_id <- get_team_id (assoc = get_in ("association"),
-                                             name = get_in ("team"))
-                if (get_in ("players_tabs") == paste0 ("single",id))
-                    add_player (name=get_in ("ploayer_name"),
-                                pos = get_in ("player_pos"),
-                                team_id = t_id)
+                t_id <- get_team_id (assoc = get_in(association),
+                                             name = get_in(team))
+                if (get_in(players_tabs) == ID (single))
+                    add_player (name=get_in(player_name),
+                                     pos = get_in(player_pos),
+                                     team_id = t_id)
                 else{
                     add_players (poss = positions (),
                                  team_id = t_id)}})
 
 
         positions <- reactive ({
-            req(get_in ("position_f"))
-            tryCatch(read.csv(get_in("position_f")$datapath),
+            req(get_in(position_f))
+            tryCatch(read.csv(get_in(position_f)$datapath),
                      error = function(e)
                          stop(safeError(e)))})
 
-        output [[paste0 ("template_p",id)]] <-
-            downloadHandler (filename = function () "template_position.csv",
+        bind_output (template_p,downloadHandler (filename = function () "template_position.csv",
                              content = function (file)
-                                 write.csv (position_template,file,row.names=FALSE))
+                                 write.csv (position_template,file,row.names=FALSE)) )
 
-        output [[paste0 ("contents",id)]] <-
-            renderDataTable(positions (),
-                            options = list(scrollX = "true", scrollY= "true",
-                                           pageLength = 5,
-                                           scrollCollapse = "true",editable = "true"))})
+
+
+        bind_output (contents,renderDataTable(positions (),
+                                              options = list(scrollX = "true", scrollY= "true",
+                                                             pageLength = 5,
+                                                             scrollCollapse = "true",editable = "true")))
+    })

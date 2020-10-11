@@ -37,6 +37,7 @@ module_frontend(
 module_backend (
     name = dropmenu,
     args = alist (choices = ,
+                  reactive = FALSE,
                   selected = NULL),
     body = {
             dist <- get_backend (mode_sel,list (ID (distribution)))
@@ -55,4 +56,5 @@ module_backend (
                             selected = get_backend (selector,
                                                     list (ID (sel),
                                                           choices = choices ,
+                                                          reactive = reactive,
                                                              selected = selected)))})

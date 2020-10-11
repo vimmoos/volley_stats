@@ -12,21 +12,25 @@ module_frontend(
                  preload = TRUE,
                  createFilter = " [a-z]+"),
     body =
-        front_selector (
-            name = selector,
-            title = title,
-            create = FALSE,
-            allowEmptyOption = allowEmptyOption,
-            preload = preload,
-            createFilter = createFilter))
+        selectizeInput (ID (selector),
+                        choices = NULL, selected =NULL,
+                        label = title,
+                        options = list (create = create,
+                                        allowEmptyOption = allowEmptyOption,
+                                        preload = preload,
+                                        createFilter = createFilter)))
 
 module_backend (
     name = selector,
     args = alist (choices = ,
+                  reactive = FALSE,
                   selected = NULL),
     body ={
-        observe (back_selector (
-            name = selector,
-            choices  = choices (),
-            selected = if (is.null (selected)) first (choices ())else selected))
+        observe ({
+            cs <- if (reactive) choices () else choices
+            updateSelectizeInput (session,ID (selector),
+                                          selected =if (is.null (selected)) first (cs) else selected,
+                                          choices = cs,
+                                          server=TRUE)})
+
         reactive (get_in (selector))})

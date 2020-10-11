@@ -27,12 +27,13 @@ module_server <- function(input,output,session)
                 filter (Position == sel)}
 
     assoc <- get_backend (selector,
-                 alist(id ="select_ass",
-                       choices = reactive (with_db ((team_with_stats ()%>% collect) $Association))))
+                          alist(id ="select_ass",
+                                choices = with_db ((team_with_stats ()%>% collect) $Association)))
 
     team <-
         get_backend (selector,
                      alist ("select_team",
+                            reactive = TRUE,
                             choices =
                                 reactive ({
                                     req (assoc ())
@@ -44,6 +45,7 @@ module_server <- function(input,output,session)
     opt <-
         get_backend (dropmenu,
                      alist ("player_settings",
+                            reactive = TRUE,
                             choices= reactive ({
                                 req (team ())
                                 get_choices (with_db (
@@ -79,11 +81,10 @@ module_server <- function(input,output,session)
 
     opt_team <- get_backend (dropmenu,
                              alist ("team_settings",
-                                    choices = reactive (c("Opposite",
-                                                          "Middle_Blocker",
-                                                          "Setter", "Libero",
-                                                          "Outside_Hitter",
-                                                          "All"))))
+                                    choices =  c("All","Opposite",
+                                                 "Middle_Blocker",
+                                                 "Setter", "Libero",
+                                                 "Outside_Hitter")))
     data_team <- reactive (
         append (
             lapply (data () [1:2],function (x)

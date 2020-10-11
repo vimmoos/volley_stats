@@ -74,7 +74,7 @@ observe_confirmation <-
                                               text = text_err,
                                               type = "error")
                           else ask_confirmation (
-                                   inputId = paste0 (conf_id,id),
+                                   inputId = ID (conf_id) ,
                                    title = conf_title,
                                    text= conf_text,
                                    html=html))
@@ -166,28 +166,3 @@ get_backend <-
         expr = do.call (paste0 ("b_",quote (name)),append (alist (input = input,
                                                                   output = output,
                                                                   session = session), args)))
-
-front_selector <-
-    defmacro (
-        name,
-        title,
-        create = FALSE,
-        allowEmptyOption = FALSE,
-        preload = TRUE,
-        createFilter = "[a-z]+",
-        expr = selectizeInput (paste0 (quote (name),id),
-                               choices = NULL, selected =NULL,
-                               label = title,
-                               options = list (create = create,
-                                               allowEmptyOption = allowEmptyOption,
-                                               preload = preload,
-                                               createFilter = createFilter)))
-back_selector <-
-    defmacro (
-        name,
-        choices,
-        selected = NULL,
-        expr =  updateSelectizeInput (session,paste0 (quote (name),id),
-                              selected =selected,
-                              choices = choices,
-                              server=TRUE))

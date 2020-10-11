@@ -1,7 +1,7 @@
 source("./db_driver/burocracy.r")
 source("./db_driver/utils.r")
 source("./db_driver/queries.r")
-source("./db_driver/create_table.r")
+source("./db_driver/create_tables.r")
 source("./db_driver/inserts.r")
 source("./db_driver/views.r")
 source("./db_driver/sql_interface.r")
