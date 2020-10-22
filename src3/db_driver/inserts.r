@@ -4,11 +4,14 @@ library (gtools)
 library (tidyverse)
 source("./db_driver/utils.r")
 
-add_team <- function (con=R_CON_DB,name,gender,association)
-    dbExecute (con,
-               paste0("INSERT INTO Teams (Name,Gender,Association) ",
+execute_sql (
+    add_team,
+    args = alist (name=,gender=,association=),
+    sql_string =
+        paste0("INSERT INTO Teams (Name,Gender,Association) ",
                       "VALUES ('",name,"',",gender, ",'",association,
                       "');"))
+
 add_game <- function (con=R_CON_DB,opp_id,team_id,date)
 {
     dbExecute (con,
@@ -37,25 +40,34 @@ sub_player_id <- function (df,opp_id,team_id)
 }
 
 
-add_stats <- function (con=R_CON_DB,df,opp_id,team_id,game_id)
-{
-    print (sub_player_id (df,opp_id,team_id) %>%
-                               mutate (Game_id = game_id))
-    dbExecute (con,
-               sqlAppendTable (con,"Stats",
-                               sub_player_id (df,opp_id,team_id) %>%
-                               mutate (Game_id = game_id)))
-}
+execute_sql (
+    add_stats,
+    args = alist (df=,opp_id=,team_id=,game_id=),
+    sql_string =
+        sqlAppendTable (con,"Stats",
+         sub_player_id (df,opp_id,team_id) %>%
+                        mutate (Game_id = game_id)
 
-add_player <- function (con=R_CON_DB,name,pos,team_id)
-    dbExecute (con,
-               paste0 ("INSERT INTO Players (Name,Position,Team_id)",
+                                    ))
+
+
+execute_sql (
+    add_player,
+    args = alist (pos=,team_id=),
+    sql_string =
+        paste0 ("INSERT INTO Players (Name,Position,Team_id)",
                        " VALUES ('",name,"','",pos,"',",team_id,
-                       ");"))
+                       ") ON DUPLICATE KEY UPDATE Name='",name,
+                       "',Position='",pos,"',Team_id=",team_id,";"))
 
-add_players <- function (con=R_CON_DB,poss,team_id)
-    dbExecute (con,
-               sqlAppendTable (con,"Players",
-                               poss %>%
-                               mutate (Team_id = team_id) %>%
-                               as.data.frame))
+
+execute_sql (
+    add_players,
+    args = alist (poss=,team_id=),
+    sql_string =
+        paste0 (sqlAppendTable (con,"Players",
+                                            poss %>%
+                                            mutate (Team_id = team_id) %>%
+                                            as.data.frame)@.Data,
+                       "ON DUPLICATE KEY UPDATE Name = values(Name),",
+                       "Position= values(Position), Team_id = values(Team_id);"))

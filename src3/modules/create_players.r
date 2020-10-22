@@ -52,30 +52,37 @@ module_backend (
 
         team <- get_backend (selector,alist (ID (team),
                                              reactive = TRUE,
-                                             choices = reactive (with_db (get_team_name(assoc = assoc ())))))
+                                             choices = reactive ({
+                                                 req (assoc ())
+                                                 with_db (get_team_name(assoc = assoc ()))})))
+
 
         upload_confirmation (
             session,
             what = get_in(create_players),
-            bool_err = isnull (get_in(team)) |
+            req_objs = list (team (),get_in (position_f),get_in (player_name),get_in (player_pos)),
+            bool_err = is.null (team ()) |
                 (is.null (get_in(position_f)) &
-                 (is.null (get_in(player_name)) |
-                  get_in (player_name) == "" |
-                  is.null (get_in(player_pos)))) ,
+                         (is.null (get_in(player_name)) |
+                                  get_in (player_name) == "" |
+                                  is.null (get_in(player_pos)))) ,
             conf_id = confirm_players,
             conf_title = "Are you sure to upload?",
-            conf_text = tags$ul(tags$li (paste ("Team:",get_in (team))),
-                                if (get_in(players_tabs) == ID (single))
-                                    tags$div(tags$li (paste ("Player:",
-                                                             get_in(player_name))),
-                                                  tags$li (paste ("Position:",
-                                                                  get_in(player_pos))))
-                                else
-                                    tags$li (paste ("File:",
-                                                    get_in(position_f)$name))),
+            conf_text = tags$div (
+                                 tags$p ("This upload will override existing players with the new inserted ones",
+                                         style ="color: #dd4b39;"),
+                                 tags$ul(tags$li (paste ("Team:",team())),
+                                              if (get_in(players_tabs) == ID (single))
+                                              tags$div(tags$li (paste ("Player:",
+                                                                       get_in(player_name))),
+                                                            tags$li (paste ("Position:",
+                                                                            get_in(player_pos))))
+                                              else
+                                              tags$li (paste ("File:",
+                                                              get_in(position_f)$name)))),
             body = {
-                t_id <- get_team_id (assoc = get_in(association),
-                                             name = get_in(team))
+                t_id <- get_team_id (assoc = assoc(),
+                                     name = team())
                 if (get_in(players_tabs) == ID (single))
                     add_player (name=get_in(player_name),
                                      pos = get_in(player_pos),
@@ -97,8 +104,10 @@ module_backend (
 
 
 
-        bind_output (contents,renderDataTable(positions (),
-                                              options = list(scrollX = "true", scrollY= "true",
-                                                             pageLength = 5,
-                                                             scrollCollapse = "true",editable = "true")))
+        bind_output (contents,renderDataTable({
+            req (positions ())
+            positions ()},
+            options = list(scrollX = "true", scrollY= "true",
+                           pageLength = 5,
+                           scrollCollapse = "true",editable = "true")))
     })

@@ -12,7 +12,7 @@ module_frontend(
         title = "Settings",
         status="primary",
         right = TRUE,
-        tooltip = TRUE,
+        tooltip = tooltipOptions (placement="left",title="Settings"),
         label = "Settings"),
     body = dropdownButton(
         status= status,
@@ -30,7 +30,7 @@ module_frontend(
                     uiOutput (ID (warning)),
                     width = 6),
 
-            column (get_frontend (mode_sel,list (ID (set_game),"Set/Game",inline=TRUE)),
+            column (get_frontend (mode_sel,list (ID (set_game),"Game/Set",inline=TRUE)),
                     tags$p ("decide the context in which the probability of the event will be calculated"),
                     width = 6))))
 

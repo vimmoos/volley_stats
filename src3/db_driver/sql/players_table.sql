@@ -4,6 +4,7 @@ CREATE TABLE Players
  Name VARCHAR(100) NOT NULL,
  Position VARCHAR(100) NOT NULL,
  Team_id MEDIUMINT NOT NULL,
+ CONSTRAINT unique_player UNIQUE KEY (Name,Team_id),
  CONSTRAINT fk_team_id
  FOREIGN KEY (Team_id) REFERENCES Teams (Team_id)
  ON DELETE CASCADE

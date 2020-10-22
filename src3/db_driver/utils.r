@@ -1,13 +1,14 @@
 library (gtools)
 source("./db_driver/burocracy.r")
+source("./modules/utils.r")
 
 execute_sql <-
     defmacro(
-    name,sql_string,
+    name,sql_string,args = alist(),
     expr =
         macro_defn (
-            name,
-            alist(con=R_CON_DB),
+            if (is.symbol(quote(name))) paste0(quote(name)) else name ,
+            append(alist(con=R_CON_DB),args),
             dbExecute (con,sql_string)))
 
 create_table <- defmacro (
@@ -70,21 +71,11 @@ bench_query <- function(query,n = 100)
 
 get_id <- function (name,team_df,opp_df)
 {
-    x <- team_df [grep (name,team_df$Name),]$Player_id
-    y <- opp_df [grep (name,opp_df$Name),]$Player_id
+    name <- str_trim (name,side="both")
+    x <- team_df [grep (first (name),team_df$Name),]$Player_id
+    y <- opp_df [grep (first (name),opp_df$Name),]$Player_id
     if (is_empty (x))
-        if (is_empty (y)) stop (paste ("Unmatched Name",name))
+        if (is_empty (y)) stop (paste ("Unmatched Name",name,"names",team_df$Name,opp_df$Name))
         else y
     else x
 }
-
-
-
-
-team_with_stats <- function (con = R_CON_DB)
-    get_tbl (con,table ="Teams") %>%
-        inner_join (get_tbl (con,table ="Players") %>%
-                    select (Team_id,Player_id)) %>%
-        semi_join (get_tbl (con,table ="Stats")) %>%
-        select (Team_id,Name,Association) %>%
-        distinct

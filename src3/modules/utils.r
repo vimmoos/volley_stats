@@ -38,6 +38,7 @@ plot_mean <-
                                 "att_k"),
         fill=c ("#dd4b39", "#00a65a","#f39c12"),
         expr = ggplot (data,aes(factor (x,levels=levels),y,fill=x)) +
+            ## theme_dark ()+
             geom_col()+
             geom_errorbar(aes(ymin = y - y_se ,ymax = y + y_se,width=.2))+
             scale_fill_manual (values=fill)+
@@ -51,7 +52,11 @@ plot_dist <-
                            "att_k"),
         fill=c ("#dd4b39", "#00a65a","#f39c12"),
         expr =  ggplot(data,aes(factor (x,levels=levels),y,fill=x))+
-            geom_violin()+
+            ## theme_dark ()+
+            geom_violin(draw_quantiles=c (0.25,0.5,0.75))+
+            stat_summary (fun=median,geom="point",shape=20,size=7,
+                          color="black", fill="black")+
+            geom_point (alpha =.5)+
             scale_fill_manual (values=fill)+
             theme (legend.position="none")+
             xlab ("Event") +
@@ -60,14 +65,15 @@ plot_dist <-
 
 observe_confirmation <-
     defmacro (
-        session,what,bool_err,
+        session,what,req_objs,bool_err,
         conf_id,conf_title,conf_text,
         body,
         title_err="Error missing values",
         text_err="Please insert all needed values!",
         html=TRUE,
         expr = {
-            observeEvent (what,
+            observeEvent (what,{
+                do.call (req,req_objs)
                           if (bool_err)
                               sendSweetAlert (session,
                                               title = title_err,
@@ -77,13 +83,14 @@ observe_confirmation <-
                                    inputId = ID (conf_id) ,
                                    title = conf_title,
                                    text= conf_text,
-                                   html=html))
-            observeEvent (get_in (conf_id),
+                                   html=html)})
+            observeEvent (get_in (conf_id),{
+                do.call (req,append (req_objs,get_in (conf_id)))
                           if (get_in (conf_id))
-                              body)})
+                              body})})
 upload_confirmation <-
     defmacro (
-        session,what,bool_err,
+        session,what,req_objs,bool_err,
         conf_id,conf_title,conf_text,
         body,
         title_err="Error missing values",
@@ -92,6 +99,7 @@ upload_confirmation <-
         expr = observe_confirmation (
             session = session,
             what = what,
+            req_objs = req_objs,
             bool_er= bool_err,
             conf_id = conf_id,
             conf_title = conf_title,
@@ -106,7 +114,7 @@ upload_confirmation <-
                                         title= "Upload Error",
                                         text = tags$p (paste ("Please contact the admin",
                                                               "ERROR:",
-                                                              e,
+                                                              safeError (e),
                                                               sep="\n")),
                                         type = "error")
                         return (FALSE)})
@@ -130,11 +138,9 @@ module_frontend_box <-
         name,title,status,body,width=6,args=alist (),
         solidHeader = TRUE,collapsible = TRUE,
         expr =
-            macro_defn (
-                paste0("f_",quote (name)),
-                append (alist(id=),args),
-                do.call (
-                    "box",append (
+            module_frontend (name,args,
+                             do.call (
+                                 "box",append (
                               list (id = id,
                                     width = width,
                                     title = tags$p (title,style = "font-size:300%;"),
@@ -142,7 +148,8 @@ module_frontend_box <-
                                     solidHeader =solidHeader,
                                     collapsible = collapsible,
                                     useSweetAlert ("dark")),
-                              body))))
+                              body))
+                             ))
 
 
 

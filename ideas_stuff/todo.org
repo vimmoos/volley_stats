@@ -2,7 +2,8 @@
 ** INPROGRESS [#B] look for docker swarm
 ** TODO [#C] look for traefik
 ** INPROGRESS [#C] set up swarm
-** TODO [#A] data ?
+** DONE [#A] data ?
+   CLOSED: [2020-10-12 Mon 01:36]
 * MODULES
 ** DONE [#B] fix plots
    CLOSED: [2020-09-24 Thu 17:07]
@@ -19,14 +20,13 @@
 ** INPROGRESS [#A] Attack
 ** INPROGRESS [#A] Pass
 ** INPROGRESS [#A] Serve
-** TODO [#A] Block
+** INPROGRESS [#A] Block
 ** TODO [#A] Ball distribution
 ** TODO [#B] Trends
 ** TODO General Stats
 
 * DONE add database
   CLOSED: [2020-10-01 Thu 01:32]
-** TODO add data locally
 ** DONE add data remotely
    CLOSED: [2020-10-01 Thu 01:31]
 
@@ -34,12 +34,11 @@
   CLOSED: [2020-09-25 Fri 02:51]
 * TODO add maybe a compare player tab
 * TODO fix startup bugs
-* TODO add picture of players
+* TODO add picture of players ????
 * TODO checking file in upload and raise errors
 * TODO sanity check for bobby tables
 * DONE decide how to display settings
   CLOSED: [2020-10-10 Sat 17:45]
-  dropdown, dropdownbutton or vanilla shiny
 * DONE add sql views
   CLOSED: [2020-10-10 Sat 17:45]
 * DONE use data from sql
@@ -53,9 +52,10 @@
 
 * DONE continue to integrate database in application
   CLOSED: [2020-10-11 Sun 23:36]
-* HOLD benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
+* DONE benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
+  CLOSED: [2020-10-21 Wed 17:37]
 
-* TODO add login and admin stuff
+* INPROGRESS add login and admin stuff
   accept upload request
 
 * BACKEND

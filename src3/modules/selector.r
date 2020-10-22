@@ -10,13 +10,14 @@ module_frontend(
                  create = FALSE,
                  allowEmptyOption = FALSE,
                  preload = TRUE,
-                 createFilter = " [a-z]+"),
+                 createFilter = "[a-z]+"),
     body =
         selectizeInput (ID (selector),
                         choices = NULL, selected =NULL,
                         label = title,
                         options = list (create = create,
                                         allowEmptyOption = allowEmptyOption,
+                                        createOnBlur = create,
                                         preload = preload,
                                         createFilter = createFilter)))
 

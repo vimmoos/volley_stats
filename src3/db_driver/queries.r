@@ -80,3 +80,11 @@ get_players_name_pos <- function (con = R_CON_DB,team_id = 2,position = "Middle_
                 sselect ("Name","Players",
                          paste0 ("Team_id =", team_id,
                                  " AND Position = '",position,"'")))
+
+team_with_stats <- function (con = R_CON_DB)
+    get_tbl (con,table ="Teams") %>%
+        inner_join (get_tbl (con,table ="Players") %>%
+                    select (Team_id,Player_id)) %>%
+        semi_join (get_tbl (con,table ="Stats")) %>%
+        select (Team_id,Name,Association) %>%
+        distinct

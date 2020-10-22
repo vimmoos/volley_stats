@@ -9,14 +9,21 @@ source ("./modules/create_team.r")
 source ("./modules/create_players.r")
 source("./modules/utils.r")
 source ("./db_driver/driver.r")
+source ("./modules/infograph.r")
 
 source ("./utils.r")
 library (tidyverse)
 library(data.table)
+library (shinycssloaders)
 
 module_server <- function(input,output,session)
 {
+    updateSelectizeInput (session,"pippo",
+                          choices = c ("gna"),
+                          server=TRUE)
+
     filtered_fun_team <- function (x){
+        req (opt_team$selected ())
         sel <- opt_team$selected ()
         if (sel == "All")
             x %>%
@@ -74,7 +81,9 @@ module_server <- function(input,output,session)
                         filter (Player_id == opt$selected ())})})
 
 
+    get_backend (infograph,list ("player"))
     get_backend (attack,list ("player",filtered_data,opt$dist))
+    get_backend (block,list ("player",filtered_data,opt$dist))
     get_backend (pass,list ("player",filtered_data,opt$dist))
     get_backend (serve,list ("player",filtered_data,opt$dist))
 
@@ -85,7 +94,7 @@ module_server <- function(input,output,session)
                                                  "Middle_Blocker",
                                                  "Setter", "Libero",
                                                  "Outside_Hitter")))
-    data_team <- reactive (
+    data_team <- reactive ({
         append (
             lapply (data () [1:2],function (x)
                 x %>%
@@ -96,7 +105,7 @@ module_server <- function(input,output,session)
                 x %>%
                 select (-Player_id) %>%
                 group_by (Position,metric,index) %>%
-                summarise_each (partial (mean,na.rm = TRUE)))))
+                summarise_each (partial (mean,na.rm = TRUE))))})
 
     select_data_team <- reactive ({
         if (opt_team$game_set ())
@@ -107,7 +116,6 @@ module_server <- function(input,output,session)
                   global = data_team ()$game_global)})
 
     filtered_data_team <- reactive ({
-        req (opt_team$selected ())
         list (data =select_data_team ()$data %>%
                                          group_by (metric) %>%
                                          filtered_fun_team,
@@ -120,6 +128,7 @@ module_server <- function(input,output,session)
 
     get_backend (attack,list ("team",filtered_data_team,opt_team$dist))
     get_backend (pass,list ("team",filtered_data_team,opt_team$dist))
+    get_backend (block,list ("team",filtered_data_team,opt_team$dist))
     get_backend (serve,list ("team",filtered_data_team,opt_team$dist))
 
 

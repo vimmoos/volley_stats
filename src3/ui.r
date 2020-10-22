@@ -2,6 +2,7 @@
 library (shiny)
 library (shinydashboard)
 source("./modules/attack.r")
+source ("./modules/block.r")
 source("./modules/serve.r")
 source("./modules/pass.r")
 source("./modules/selector.r")
@@ -11,6 +12,7 @@ source("./modules/utils.r")
 source ("./modules/upload_game.r")
 source ("./modules/create_team.r")
 source ("./modules/create_players.r")
+source ("./modules/infograph.r")
 
 
 OT_tab <-
@@ -27,6 +29,7 @@ OT_tab <-
 
                 get_frontend (attack,alist ("team")),
                 get_frontend (pass,alist ("team")),
+                get_frontend (block,alist ("team")),
                 get_frontend (serve,alist ("team"))))
 
 OP_tab <-
@@ -36,14 +39,15 @@ OP_tab <-
                 get_frontend (dropmenu,alist ("player_settings",
                                               title_sel ="Select Player",
                                               icon = icon ("gear"))),
-                right = 20,
-                up = 1),
+                right = 10,
+                up = 0),
             h1 ("Player Stats",style = "text-align:center;font-size:300%;"),
             fluidRow (
-                get_frontend (attack,alist ("player")),
-                get_frontend (pass,alist ("player")),
-                get_frontend (serve,alist ("player"))
-            )
+                      get_frontend (attack,alist ("player")),
+                      get_frontend (pass,alist ("player")),
+                      get_frontend (block,alist ("player")),
+                      get_frontend (serve,alist ("player"))
+                      )
             )
 
 
@@ -72,7 +76,16 @@ module_body <-
                                      actionButton("test", label = "test"),
                                      right = 10,
                                      bottom = 10
-                                     )
+                          ),
+                circleButton ("gna",icon=icon ("info"),size = "sm"),
+                selectizeInput ("pippo",
+                                choices = NULL, selected =NULL,
+                                label = "dio",
+                                options = list (create = TRUE,
+                                                         allowEmptyOption = FALSE,
+                                                         createOnBlur = TRUE,
+                                                         preload = TRUE
+                                                         )),
                           ),
         tabItem (tabName = "ttrends",
                            h2 ("Team Stats"),
@@ -83,11 +96,11 @@ module_sidebar <-
     sidebarMenu (
         menuItem ("Overall Player",tabName = "pstats", icon = icon ("chart-bar")),
         menuItem ("Overall Team",tabName = "tstats", icon = icon ("volleyball-ball")),
-        menuItem ("Player Trends",tabName = "ptrends", icon = icon ("chart-bar")),
-        menuItem ("upload",tabName = "upload", icon = icon ("chart-bar")),
+        menuItem ("Upload",tabName = "upload", icon = icon ("globe")),
         menuItem ("Team Trends",tabName = "ttrends", icon = icon ("volleyball-ball")),
+        menuItem ("Player Trends",tabName = "ptrends", icon = icon ("chart-bar")),
         get_frontend (selector,alist (
-                                   "select_ass","Choose an Association")),
+                                      "select_ass","Choose an Association")),
         get_frontend (selector,alist (
                                       "select_team","Choose a Team"))
         )
@@ -96,12 +109,16 @@ module_sidebar <-
 ## }"'
 module_ui <-
     dashboardPage(
-        dashboardHeader(title = "Volley Stats"
-                                ),
-        dashboardSidebar(module_sidebar),
+        dashboardHeader(title = "Volley Stats",
+                        tags$li (class="dropdown",
+                                 get_frontend (infograph,alist ("player",icon = icon ("info"))),
+                                 style="margin-left:-40%;margin-top:20%;"
+                                 )
+                        ),
+                       dashboardSidebar(module_sidebar),
 
-        dashboardBody(
-        tags$style(".nav  { padding:1%}"),
+                       dashboardBody(
+                                     tags$style(".nav  { padding:1%}"),
         module_body
         ),
         skin = "blue")

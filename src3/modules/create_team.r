@@ -35,6 +35,7 @@ module_backend (
 
             upload_confirmation (
                 session,
+                req_objs = list (assoc (),get_in (name_t),get_in (gender)),
                 what = get_in(create_team) ,
                 bool_err =
                     isnull (assoc (),get_in(name_t),

@@ -1,6 +1,7 @@
 library(RMariaDB)
 library(DBI)
 library (gtools)
+library(tidyverse)
 
 R_CON_DB <- NULL
 
@@ -35,7 +36,7 @@ position_template <-
 
 games_template <-
     as_tibble (
-        list (Player = c ("name1"),
+        list (Name = c ("name1"),
               Set = c (as.integer(1)),
               Attack_n = c (as.integer(0)),
               Attack_e = c (as.integer(0)),
@@ -44,8 +45,10 @@ games_template <-
               ServeR_p= c (as.integer(0)),
               ServeR_g= c (as.integer(0)),
               ServeR_ex= c (as.integer(0)),
+              Serve_p = c (as.integer(0)),
               Serve_a= c (as.integer(0)),
               Serve_n= c (as.integer(0)),
               Serve_e= c (as.integer(0)),
               Block_t= c (as.integer(0)),
+              Block_e= c (as.integer(0)),
               Block_k= c (as.integer(0))))

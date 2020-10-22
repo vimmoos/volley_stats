@@ -46,50 +46,61 @@ module_backend (
                                                          get_all_associations ())))
         team_name <- get_backend (selector,alist (ID(team_name),
                                                   reactive = TRUE,
-                                                  choices = reactive (with_db (
-                                                                  get_team_name(assoc = team_ass ())))))
+                                                  choices = reactive ({
+                                                      req (team_ass ())
+                                                      with_db (
+                                                               get_team_name(assoc = team_ass ()))})))
         op_ass <- get_backend (selector,alist (ID(op_ass),
-                                               choices = with_db (get_all_associations ())))
+                                                 choices = with_db (get_all_associations ())))
         op_name <- get_backend (selector,alist (ID(op_name),
                                                 reactive = TRUE,
-                                                  choices = reactive ((as_tibble (with_db (get_team_name(assoc = op_ass ()))) %>%
-                                                                                 filter (value != team_name ()))$value)))
+                                                choices =
+                                                    reactive ({
+                                                        req (op_ass (),team_ass (),team_name ())
+                                                        names = with_db (get_team_name(assoc = op_ass ()))
+                                                        if (team_ass () == op_ass ())
+                                                            (as_tibble (names) %>%
+                                                                       filter (value != team_name ()))$value
+                                                             else
+                                                                 names})))
 
 
         upload_confirmation (
                              session,
-                             what =get_in(upload_game),
-                             bool_err =
-                             isnull (get_in(game_date),team_name (),
-                                           team_ass (),op_name (),
-                                           op_ass (),get_in(file)),
-                             conf_id = confirm_game,
-                             conf_title = "Are you sure to upload locally?",
-                             conf_text = tags$ul (tags$li (paste ("Date:",get_in(game_date))),
-                                                       tags$li (paste ("Home Team:",team_name ())),
-                                                       tags$li (paste ("Away Team:",op_name ())),
-                                                       tags$li (paste ("File:",get_in(file)$name))),
-                             body ={
-                                    team_id <- get_team_id (assoc = team_ass (),
-                                                                    name = team_name ())
-                                    op_id <- get_team_id (assoc = op_ass (),
-                                                                  name = op_name ())
-                                    game_id <- add_game (opp_id = op_id,
-                                                                  team_id = team_id,
-                                                                  date = get_in(game_date))
-                                    print (game_id)
-                                    add_stats (df = games (),
-                                                    opp_id = op_id,
-                                                    team_id = team_id,
-                                                    game_id = game_id)})
+            what =get_in(upload_game),
+            req_objs = list (get_in (game_date),team_name (),team_ass (),op_name (),
+                             op_ass (),get_in (file)),
+            bool_err =
+                isnull (get_in(game_date),team_name (),
+                        team_ass (),op_name (),
+                        op_ass (),get_in(file)),
+            conf_id = confirm_game,
+            conf_title = "Are you sure to upload locally?",
+            conf_text = tags$ul (tags$li (paste ("Date:",get_in(game_date))),
+                                 tags$li (paste ("Home Team:",team_name ())),
+                                 tags$li (paste ("Away Team:",op_name ())),
+                                 tags$li (paste ("File:",get_in(file)$name))),
+            body ={
+                team_id <- get_team_id (assoc = team_ass (),
+                                        name = team_name ())
+                op_id <- get_team_id (assoc = op_ass (),
+                                      name = op_name ())
+                game_id <- add_game (opp_id = op_id,
+                                     team_id = team_id,
+                                     date = get_in(game_date))
+                print (game_id)
+                add_stats (df = games (),
+                           opp_id = op_id,
+                           team_id = team_id,
+                           game_id = game_id)})
 
 
 
         games <- reactive ({
-            req(input [[ID(file) ]])
-            tryCatch(read.csv(get_in(file)$datapath),
-                     error = function(e)
-                         stop(safeError(e)))})
+                            req(get_in (file))
+                            tryCatch(read.csv(get_in(file)$datapath),
+                                             error = function(e)
+                                             stop(safeError(e)))})
 
         bind_output (template_g,downloadHandler (filename = function () "template_game.csv",
                              content = function (file)
