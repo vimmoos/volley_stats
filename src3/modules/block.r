@@ -24,24 +24,20 @@ module_backend(
                name = block,
                args = alist (data=,dist=),
                body =
-               {
-                   block_data <- reactive ({
-                       req(data())
-                       lapply (data (),function (x)
-                                    x %>%
-                                    filter (metric %like% "block*"))})
-
-                                 bind_output (block_e,renderUI (perc_se (block_data ()$data,"block_e")))
-                bind_output (block_k,renderUI (perc_se (block_data ()$data,"block_k")))
-                bind_output (block_n,renderUI (perc_se (block_data ()$data,"block_n")))
-
-                levels = c ("block_e",
-                            "block_n",
-                            "block_k")
+                   {
+                       # put in global.r
+                   levels = c ("block_e",
+                               "block_n",
+                               "block_k")
+                       bind_output (block_e,renderUI (perc_se (data ()$data,"block_e")))
+                   bind_output (block_k,renderUI (perc_se (data ()$data,"block_k")))
+                   bind_output (block_n,renderUI (perc_se (data ()$data,"block_n")))
 
 
-                bind_output (block_graph,renderPlot (
-                                                     if (dist ())
-                                                     plot_dist (block_data ()$global,metric,val,levels=levels)
-                                                     else
-                                                     plot_mean (block_data ()$data,metric,val,se,levels=levels)))})
+
+                   bind_output (block_graph,renderPlot (
+                                                if (dist ())
+                                                    plot_dist (data ()$global [startsWith (data ()$global$metric,"block"),],metric,val,levels=levels)
+                                                else
+                                                    plot_mean (data ()$data [startsWith (data ()$data$metric,"block"),],metric,val,se,levels=levels)))
+               })

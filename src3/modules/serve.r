@@ -29,30 +29,25 @@ module_backend(
                name = serve,
                args = alist (data=,dist=),
                body =
-               {
-                   serve_data <- reactive ({
-                       req (data ())
-                                        lapply (data (),function (x)
-                                                     x %>%
-                                                     filter (metric %like% "serve"))})
+                   {
+                       # put in global.R
+                   levels = c ("serve_e",
+                               "serve_n",
+                               "serve_p",
+                               "serve_k")
 
-                bind_output (serve_e,renderUI (perc_se (serve_data ()$data,"serve_e")))
-                bind_output (serve_k,renderUI (perc_se (serve_data ()$data,"serve_k")))
-                bind_output (serve_n,renderUI (perc_se (serve_data ()$data,"serve_n")))
-                bind_output (serve_p,renderUI (perc_se (serve_data ()$data,"serve_p")))
+                   fill = c ("#dd4b39", "#00a65a","#01ff70",
+                             "#f39c12")
+
+                   bind_output (serve_k,renderUI (perc_se (data ()$data,"serve_k")))
+                   bind_output (serve_n,renderUI (perc_se (data ()$data,"serve_n")))
+                   bind_output (serve_p,renderUI (perc_se (data ()$data,"serve_p")))
 
 
-                levels = c ("serve_e",
-                            "serve_n",
-                            "serve_p",
-                            "serve_k")
 
-                fill = c ("#dd4b39", "#00a65a","#01ff70",
-                          "#f39c12")
-
-                bind_output (serve_graph,renderPlot ({
-                                                      req (serve_data ())
-                                                      if (dist ())
-                                                      plot_dist (serve_data ()$global,metric,val,levels = levels,fill=fill)
-                                                      else
-                                                      plot_mean (serve_data ()$data,metric,val,se,levels = levels,fill=fill)}))})
+                   bind_output (serve_graph,renderPlot (
+                                                        if (dist ())
+                                                        plot_dist (data ()$global[startsWith (data ()$global$metric,"serve"),],metric,val,levels = levels,fill=fill)
+                                                        else
+                                                        plot_mean (data ()$data [startsWith (data ()$data$metric,"serve"),],metric,val,se,levels = levels,fill=fill)))
+                   })

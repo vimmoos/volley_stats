@@ -30,26 +30,22 @@ module_backend(
                name = pass,
                args = alist (data=,dist=),
                body =
-               {
-                   sr_data <- reactive ({
-                       req (data ())
-                       lapply (data (),function (x)
-                                    x %>%
-                                    filter (metric %like% "sr"))})
+                   {
+                       # put in global.R
+                   levels = c ("sr_er","sr_p","sr_g","sr_ex")
 
-                bind_output (sr_er,renderUI (perc_se (sr_data ()$data,"sr_er")))
-                bind_output (sr_p,renderUI (perc_se (sr_data ()$data,"sr_p")))
-                bind_output (sr_g,renderUI (perc_se (sr_data ()$data,"sr_g")))
-                bind_output (sr_ex,renderUI (perc_se (sr_data ()$data,"sr_ex")))
-
-                levels = c ("sr_er","sr_p","sr_g","sr_ex")
-
-                fill = c ("#dd4b39", "#00a65a","#01ff70",
-                          "#f39c12")
+                   fill = c ("#dd4b39", "#00a65a","#01ff70",
+                             "#f39c12")
+                   bind_output (sr_er,renderUI (perc_se (data ()$data,"sr_er")))
+                   bind_output (sr_p,renderUI (perc_se (data ()$data,"sr_p")))
+                   bind_output (sr_g,renderUI (perc_se (data ()$data,"sr_g")))
+                   bind_output (sr_ex,renderUI (perc_se (data ()$data,"sr_ex")))
 
 
-                bind_output (pass_graph,renderPlot (
-                                                    if (dist ())
-                                                    plot_dist (sr_data ()$global,metric,val,levels = levels,fill=fill)
-                                                    else
-                                                    plot_mean (sr_data ()$data,metric,val,se,levels = levels, fill=fill)))})
+
+                   bind_output (pass_graph,renderPlot (
+                                               if (dist ())
+                                                   plot_dist (data ()$global[startsWith (data ()$global$metric,"sr"),],metric,val,levels = levels,fill=fill)
+                                               else
+                                                   plot_mean (data ()$data [startsWith (data ()$data$metric,"sr"),],metric,val,se,levels = levels, fill=fill)))
+                   })

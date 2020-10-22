@@ -75,10 +75,21 @@ module_server <- function(input,output,session)
 
     filtered_data <- reactive ({
         req (opt$selected ())
-        lapply (select_data (),
-                function (x){
-                    x %>%
-                        filter (Player_id == opt$selected ())})})
+        ## lapply (select_data (),
+        ##         function (x){
+        ##             x %>%
+        ##                 filter (Player_id == opt$selected ())})
+        ## test <- list(pippo = mtcars,gna = mtcars)
+        ## test_f uses lapply
+        ##       Unit: milliseconds
+        ## expr lapply(test, test_f) ,list(pippo = filter(test$pippo, am > 1), gna = filter(test$gna,      am > 1))
+        ##      min       lq     mean   median       uq      max neval
+        ## 1.484845 1.526187 1.618928 1.549005 1.616967  18.0135 10000
+        ## 1.338290 1.373761 1.475600 1.391575 1.452584 225.7796 10000
+
+        # slitly faster
+        list (data = filter (select_data ()$data,Player_id == opt$selected ()),
+              global = filter (select_data ()$global,Player_id == opt$selected ()))})
 
 
     get_backend (infograph,list ("player"))

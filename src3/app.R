@@ -3,6 +3,7 @@ run <- function()
 {
     library(shiny)
     library(shinydashboard)
+    library(shinycssloaders)
     source("./ui.r")
     source("./server.r")
     options(browser = "/usr/bin/firefox") ## set firefox as browser

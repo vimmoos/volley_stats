@@ -2,7 +2,9 @@ library (gtools)
 
 perc_se <- function (data,filt)
 {
-    tmp <- filter (data,metric == filt)
+    ## tmp <- filter (data,metric == filt)
+    ## faster (gain 10 ms at every invocation)
+    tmp <- data [data$metric == filt,]
     paste0 (round (tmp$val*100),"% ±",
             round (tmp$se *100))
 }
