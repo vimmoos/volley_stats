@@ -22,7 +22,7 @@
 ** INPROGRESS [#A] Serve
 ** INPROGRESS [#A] Block
 ** TODO [#A] Ball distribution
-** TODO [#B] Trends
+** INPROGRESS [#B] Trends
 ** TODO General Stats
 
 * DONE add database
@@ -33,10 +33,13 @@
 * DONE fix team
   CLOSED: [2020-09-25 Fri 02:51]
 * TODO add maybe a compare player tab
-* TODO fix startup bugs
+* DONE fix startup bugs
+  CLOSED: [2020-10-23 Fri 19:00]
 * TODO add picture of players ????
-* TODO checking file in upload and raise errors
-* TODO sanity check for bobby tables
+* DONE checking file in upload and raise errors
+  CLOSED: [2020-10-23 Fri 19:11]
+* DONE sanity check for bobby tables
+  CLOSED: [2020-10-24 Sat 14:27]
 * DONE decide how to display settings
   CLOSED: [2020-10-10 Sat 17:45]
 * DONE add sql views
@@ -48,6 +51,7 @@
 * DONE fix bug reactive data
   CLOSED: [2020-10-11 Sun 23:36]
 * TODO add notification when database change
+  really smeni ...
 
 
 * DONE continue to integrate database in application
@@ -55,8 +59,8 @@
 * DONE benchmark if is faster to get gather and every time \A filter or every time get filter and \A gather
   CLOSED: [2020-10-21 Wed 17:37]
 
-* INPROGRESS add login and admin stuff
-  accept upload request
+* DONE add login and admin stuff
+  CLOSED: [2020-10-23 Fri 19:00]
 
 * BACKEND
 ** TODO [#C] add module configuration (like nestor)

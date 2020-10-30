@@ -1,154 +1,179 @@
-source("./modules/attack.r")
-source("./modules/serve.r")
-source("./modules/pass.r")
-source("./modules/selector.r")
-source("./modules/mode_sel.r")
-source("./modules/dropmenu.r")
-source ("./modules/upload_game.r")
-source ("./modules/create_team.r")
-source ("./modules/create_players.r")
-source("./modules/utils.r")
-source ("./db_driver/driver.r")
-source ("./modules/infograph.r")
-
-source ("./utils.r")
-library (tidyverse)
-library(data.table)
-library (shinycssloaders)
-
-module_server <- function(input,output,session)
-{
-    updateSelectizeInput (session,"pippo",
-                          choices = c ("gna"),
-                          server=TRUE)
-
-    filtered_fun_team <- function (x){
-        req (opt_team$selected ())
-        sel <- opt_team$selected ()
-        if (sel == "All")
-            x %>%
-                select (-Position) %>%
-                summarise_each (partial (mean,na.rm=TRUE))
-        else
-            x %>%
-                filter (Position == sel)}
-
-    assoc <- get_backend (selector,
-                          alist(id ="select_ass",
-                                choices = with_db ((team_with_stats ()%>% collect) $Association)))
-
-    team <-
-        get_backend (selector,
-                     alist ("select_team",
-                            reactive = TRUE,
-                            choices =
-                                reactive ({
-                                    req (assoc ())
-                                    get_choices (with_db (
-                                    team_with_stats () %>%
-                                    collect %>% filter (Association == assoc ())))})))
 
 
-    opt <-
-        get_backend (dropmenu,
-                     alist ("player_settings",
-                            reactive = TRUE,
-                            choices= reactive ({
-                                req (team ())
-                                get_choices (with_db (
-                                    get_players_nid (team_id =  team ())))})))
+module_server <- function(input, output, session, auth = NULL) {
+  output$upload <- renderMenu({
+    req(auth)
+    if (as.logical(reactiveValuesToList(auth)$admin)) {
+      menuItem("Upload", tabName = "upload", icon = icon("globe"))
+    }})
+
+  filtered_fun_team <- function(x, global = FALSE) {
+    req(opt_team$selected())
+    sel <- opt_team$selected()
+    if (sel == "All") {
+      x %>%
+        {if (global) {
+          . %>%
+            group_by(metric, index)
+        } else {
+          . %>%
+            group_by(metric)
+        }
+        }() %>%
+        select(-Position) %>%
+        summarise_each(partial(mean, na.rm = TRUE))
+    } else {
+      x %>%
+        filter(Position == sel)
+    }}
+
+  assoc <- get_backend(
+    selectorS,
+    alist(
+      id = "select_ass",
+      choices = with_db((team_with_stats() %>% collect())$Association)))
+
+  team <-
+    get_backend(
+      selectorR,
+      alist("select_team",
+        choices =
+          reactive({
+            req(assoc())
+            get_choices(with_db(
+              team_with_stats() %>%
+                collect() %>% filter(Association == assoc())))})))
 
 
-    data <- reactive ({
-        req (team ())
-        with_db (get_all_views (team_id = team ()))})
+  player_choices <-
+    reactive({
+      req(team())
+      get_choices(with_db(
+        get_players_nid(team_id = team())))})
+
+  opt <-
+    get_backend(
+      dropmenu,
+      alist("player_settings",
+        reactive = TRUE,
+        choices = player_choices))
 
 
-    select_data <- reactive ({
-        if (opt$game_set ())
-            list (data = data ()$by_set,
-                  global = data ()$set_global)
-        else
-            list (data = data ()$by_game,
-                  global = data ()$game_global)})
+  data <- reactive({
+    req(team())
+    with_db(get_all_views(team_id = team()))})
 
 
-    filtered_data <- reactive ({
-        req (opt$selected ())
-        ## lapply (select_data (),
-        ##         function (x){
-        ##             x %>%
-        ##                 filter (Player_id == opt$selected ())})
-        ## test <- list(pippo = mtcars,gna = mtcars)
-        ## test_f uses lapply
-        ##       Unit: milliseconds
-        ## expr lapply(test, test_f) ,list(pippo = filter(test$pippo, am > 1), gna = filter(test$gna,      am > 1))
-        ##      min       lq     mean   median       uq      max neval
-        ## 1.484845 1.526187 1.618928 1.549005 1.616967  18.0135 10000
-        ## 1.338290 1.373761 1.475600 1.391575 1.452584 225.7796 10000
-
-        # slitly faster
-        list (data = filter (select_data ()$data,Player_id == opt$selected ()),
-              global = filter (select_data ()$global,Player_id == opt$selected ()))})
+  select_data <- reactive({
+    if (opt$game_set()) {
+      list(
+        data = data()$by_set,
+        global = data()$set_global)
+    } else {
+      list(
+        data = data()$by_game,
+        global = data()$game_global)
+    }})
 
 
-    get_backend (infograph,list ("player"))
-    get_backend (attack,list ("player",filtered_data,opt$dist))
-    get_backend (block,list ("player",filtered_data,opt$dist))
-    get_backend (pass,list ("player",filtered_data,opt$dist))
-    get_backend (serve,list ("player",filtered_data,opt$dist))
+  filtered_data <- reactive({
+    req(opt$selected())
 
-
-    opt_team <- get_backend (dropmenu,
-                             alist ("team_settings",
-                                    choices =  c("All","Opposite",
-                                                 "Middle_Blocker",
-                                                 "Setter", "Libero",
-                                                 "Outside_Hitter")))
-    data_team <- reactive ({
-        append (
-            lapply (data () [1:2],function (x)
-                x %>%
-                select (-Player_id) %>%
-                group_by (Position,metric) %>%
-                summarise_each (partial (mean,na.rm = TRUE))),
-            lapply (data () [3:4],function (x)
-                x %>%
-                select (-Player_id) %>%
-                group_by (Position,metric,index) %>%
-                summarise_each (partial (mean,na.rm = TRUE))))})
-
-    select_data_team <- reactive ({
-        if (opt_team$game_set ())
-            list (data = data_team ()$by_set,
-                  global = data_team ()$set_global)
-        else
-            list (data = data_team ()$by_game,
-                  global = data_team ()$game_global)})
-
-    filtered_data_team <- reactive ({
-        list (data =select_data_team ()$data %>%
-                                         group_by (metric) %>%
-                                         filtered_fun_team,
-              global=
-                  select_data_team ()$global %>%
-                                     group_by (metric,index) %>%
-                                     filtered_fun_team)})
+    ## Unit: microseconds
+    ##                           expr     min      lq      mean  median      uq
+    ##  filter(test, Player_id == 10) 612.168 632.937 690.81701 641.007 699.848
+    ##   test[test$Player_id == 10, ]  51.807  56.867  65.41083  63.980  67.176
+    ##         max neval
+    ##  146906.682 10000
+    ##    3190.724 10000
+    list(
+      data = select_data()$data [select_data()$data$Player_id == opt$selected(), ],
+      global = select_data()$global [select_data()$global$Player_id == opt$selected(), ])})
 
 
 
-    get_backend (attack,list ("team",filtered_data_team,opt_team$dist))
-    get_backend (pass,list ("team",filtered_data_team,opt_team$dist))
-    get_backend (block,list ("team",filtered_data_team,opt_team$dist))
-    get_backend (serve,list ("team",filtered_data_team,opt_team$dist))
+  get_backend(infograph, list("player", "sidebar"))
+  get_backend(attack, list("player", filtered_data, opt$dist))
+  get_backend(block, list("player", filtered_data, opt$dist))
+  get_backend(pass, list("player", filtered_data, opt$dist))
+  get_backend(serve, list("player", filtered_data, opt$dist))
+
+
+  opt_team <- get_backend(
+    dropmenu,
+    alist("team_settings",
+      choices = c(
+        "All", "Opposite",
+        "Middle_Blocker",
+        "Setter", "Libero",
+        "Outside_Hitter")))
+  data_team <- reactive({
+    append(
+      lapply(data() [1:2], function(x) {
+        x %>%
+          select(-Player_id) %>%
+          group_by(Position, metric) %>%
+          summarise_each(partial(mean, na.rm = TRUE))
+      }),
+      lapply(data() [3:4], function(x) {
+        x %>%
+          select(-Player_id) %>%
+          group_by(Position, metric, index) %>%
+          summarise_each(partial(mean, na.rm = TRUE))
+      }))})
+
+  select_data_team <- reactive({
+    if (opt_team$game_set()) {
+      list(
+        data = data_team()$by_set,
+        global = data_team()$set_global)
+    } else {
+      list(
+        data = data_team()$by_game,
+        global = data_team()$game_global)
+    }})
+
+  filtered_data_team <- reactive({
+    list(
+      data = select_data_team()$data %>%
+        filtered_fun_team(),
+      global =
+        select_data_team()$global %>%
+          filtered_fun_team(global = TRUE))})
+
+
+
+  get_backend(attack, list("team", filtered_data_team, opt_team$dist))
+  get_backend(pass, list("team", filtered_data_team, opt_team$dist))
+  get_backend(block, list("team", filtered_data_team, opt_team$dist))
+  get_backend(serve, list("team", filtered_data_team, opt_team$dist))
+
+
+  data_date <- reactive(data()$game_date_global)
+  trends_opt <- get_backend(droptrends, list("trends_drop", choices = reactive(append("All", player_choices()))))
+
+  filtered_data_date <- reactive({
+    req(trends_opt$selected())
+    if (trends_opt$selected() == "All") {
+      data_date()
+    } else {
+      data_date() [data_date()$Player_id == trends_opt$selected(), ]
+    }})
+
+
+  get_backend(trends, list("trends_attack", filtered_data_date, "att"))
+  get_backend(trends, list("trends_block", filtered_data_date, "block"))
+  get_backend(trends, list("trends_pass", filtered_data_date, "sr"))
+  get_backend(trends, list("trends_serve", filtered_data_date, "serve"))
 
 
 
 
-    get_backend (create_game,list("create_game"))
-    get_backend (create_team,list ("create_team"))
-    get_backend (create_players,list ("create_players"))
 
 
-    output$test <- renderUI(selectInput("x","select only charter var",choices = c(1,2,3)))
-    output$mtcars <- renderPlot(plot (mtcars$gear))}
+  get_backend(create_game, list("create_game"))
+  get_backend(create_team, list("create_team"))
+  get_backend(create_players, list("create_players"))
+
+
+}
