@@ -84,16 +84,15 @@ module_sidebar <-
 ##     border-top-color: #d73925;
 ## }"'
 module_ui <-
-  dashboardPage(
+    dashboardPage(
     dashboardHeader(
-      title = "Volley Stats",
-      tags$li(
-        class = "dropdown",
-        get_frontend(infograph, alist("player", icon = icon("info"))),
-        style = "margin-left:-40%;margin-top:20%;")),
+                    title = "Volley Stats",
+                    tags$li(
+                            class = "dropdown",
+                            get_frontend(infograph, alist("player", icon = icon("info"))),
+                            style = "margin-left:-40%;margin-top:20%;")),
     dashboardSidebar(module_sidebar),
     dashboardBody(
-      useShinyjs(),
       tags$style(".nav  { padding:1%}"),
       module_body),
     skin = "red")

@@ -39,9 +39,9 @@ run_login <- function(wifi = FALSE)
 
   if (wifi) {
     runApp(list(ui = ui, server = server),
-           launch.browser = TRUE,,
+           launch.browser = TRUE,
            port = getOption ("shiny.port",8080),
-           host = getOption("shiny.host", "192.168.1.109"))
+           host = getOption("shiny.host", "127.0.0.1"))
   } else {
     shinyApp(ui, server)
   }}

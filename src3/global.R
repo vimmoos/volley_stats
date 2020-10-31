@@ -2,6 +2,7 @@
 ## library(compiler)
 ## enableJIT(3)
 library(shiny)
+## library(semantic.dashboard)
 library(shinydashboard)
 library(shinymanager)
 library(shinyWidgets)
