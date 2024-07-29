@@ -1,22 +1,24 @@
 
+source("./global.R")
+
 ##                                     # Init DB using credentials data
-## credentials <- data.frame(
-##     user = c("shiny", "shinymanager"),
-##     password = c("azerty", "12345"),
-##                                     # password will automatically be hashed
-##     admin = c(FALSE, TRUE),
-##     stringsAsFactors = FALSE
-## )
+credentials <- data.frame(
+    user = c("shiny", "shinymanager"),
+    password = c("azerty", "12345"),
+                                    # password will automatically be hashed
+    admin = c(FALSE, TRUE),
+    stringsAsFactors = FALSE
+)
 
 
 ##                                     # Init the database
-## create_db(
-##     credentials_data = credentials,
-##     sqlite_path = "/home/vimmoos/volley_stats/database_test.sqlite", # will
-##                                                                      # be
-##                                                                      # created
-##     passphrase = "passphrase_wihtout_keyring"
-## )
+create_db(
+    credentials_data = credentials,
+    sqlite_path = "./database_test.sqlite", # will
+                                                                     # be
+                                                                     # created
+    passphrase = "passphrase_wihtout_keyring"
+)
 
 run_login <- function(wifi = FALSE)
 {
@@ -32,7 +34,7 @@ run_login <- function(wifi = FALSE)
     # check_credentials directly on sqlite db
     res_auth <- secure_server(
       check_credentials = check_credentials(
-        "/home/vimmoos/volley_stats/database_test.sqlite",
+        "./database_test.sqlite",
         passphrase = "passphrase_wihtout_keyring"))
 
     module_server(input, output, session, res_auth)}
@@ -45,3 +47,7 @@ run_login <- function(wifi = FALSE)
   } else {
     shinyApp(ui, server)
   }}
+
+
+
+run_login(TRUE)

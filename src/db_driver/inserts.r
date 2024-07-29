@@ -16,9 +16,10 @@ execute_sql(
 add_game <- function(con = R_CON_DB, opp_id, team_id, date) {
   dbExecute(
     con,
-    sqlInterpolate(
-      "INSERT INTO Games (Opp_id,Team_id,Date) VALUES (?opp,?team,?date);",
+    sqlInterpolate(con, paste0(
+      "INSERT INTO Games (Opp_id,Team_id,Date) VALUES (?opp,?team,?date);"),
       opp = opp_id, team = team_id, date = date))
+
   (get_tbl(con, table = "Games") %>%
     filter(Opp_id == opp_id &
       Team_id == team_id &

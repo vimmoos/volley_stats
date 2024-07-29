@@ -5,14 +5,18 @@ library(tidyverse)
 
 R_CON_DB <- NULL
 
-dhost <- "192.168.1.109"
+## dhost <- "0.0.0.0"
+dhost <- Sys.getenv("DB_HOST")
 
-ddatabase <- "volley"
+## ddatabase <- "volley"
+ddatabase <- Sys.getenv("DB_NAME")
 
-dpassword <- Sys.getenv("VOLLEY_DB_PASS")
+duser <- Sys.getenv("DB_USER")
 
-startup <- function(host = dhost, database = ddatabase, password = dpassword) {
-  R_CON_DB <<- dbConnect(MariaDB(), host = host, dbname = database, password = password)
+dpassword <- Sys.getenv("DB_PASSWORD")
+
+startup <- function(host = dhost, database = ddatabase, password = dpassword,user = duser) {
+  R_CON_DB <<- dbConnect(MariaDB(), dbname = database,user=user,password=password)
 }
 
 bye <- function(con = R_CON_DB) dbDisconnect(con)

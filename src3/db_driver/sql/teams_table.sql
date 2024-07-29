@@ -1,8 +1,0 @@
-CREATE TABLE Teams
-(Team_id
- MEDIUMINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
- Name VARCHAR(100) NOT NULL,
- Gender BOOL,
- Association VARCHAR(100) NOT NULL,
- CONSTRAINT unique_teams
- UNIQUE KEY (Name,Association,Gender));

@@ -31,6 +31,7 @@ source("./server.r")
 
 ## for testing
 options(browser = "/usr/bin/firefox") ## set firefox as browser
+options(shiny.legacy.datatable = TRUE)
 
 ATT_LEVELS <- c(
   "att_e", "att_n", "att_k")

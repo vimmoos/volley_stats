@@ -59,7 +59,7 @@ module_backend(
     upload_confirmation(
       session,
       what = get_in(create_players),
-      req_objs = list(team(), get_in(position_f), get_in(player_name), get_in(player_pos)),
+      req_objs = list(team(), get_in(position_f), get_in(player_pos)),
       bool_err = is.null(team()) |
         (is.null(get_in(position_f)) &
           (is.null(get_in(player_name)) |

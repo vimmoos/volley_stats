@@ -99,7 +99,14 @@ module_backend(
           df = games(),
           opp_id = op_id,
           team_id = team_id,
-          game_id = game_id)})
+          game_id = game_id)
+        cols <- dbGetQuery(R_CON_DB,
+                        "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_name = 'Stats'")
+
+        for (col in cols$COLUMN_NAME){
+          str = paste0("UPDATE Stats SET ",col," = COALESCE(",col,",0);")
+          dbExecute(con,str)
+        }})
 
 
 

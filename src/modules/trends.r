@@ -22,7 +22,7 @@ module_backend(
                                         data() [startsWith(data()$metric, met), ],
                                         aes(x = Date, y = val, color = metric, shape = metric)) +
                                        scale_fill_manual(values = COLORS) +
-                                       scale_color_manual(values = COLOR) +
+                                       scale_color_manual(values = COLORS) +
                                        facet_grid(metric ~ ., labeller = labeller(metric = LABELLER)) +
                                        theme(legend.position = "none") +
                                        geom_point() +
