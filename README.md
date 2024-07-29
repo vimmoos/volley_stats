@@ -43,6 +43,23 @@ This application is designed to empower users to:
 
 ## Installation
 
+1. **Clone the Repository:**
+   ```bash
+   git clone git@github.com:vimmoos/volley_stats.git
+   cd volley_stats
+   ```
+
+2. **Prerequisites:**
+   * **Docker:** Make sure you have Docker installed and running on your system. You can find instructions on the official Docker website: [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
+   * **Docker Compose:** Docker Compose should also be installed.  Check the installation instructions: [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
+
+3. **Build and Run with Docker Compose:**
+   ```bash
+   docker-compose up --build
+   ```
+That's it! Your application should now be up and running. Visit http://localhost:8080 in your browser to see it in action.
+
+
 
 ## Code Structure
 
