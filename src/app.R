@@ -1,4 +1,5 @@
 
+
 source("./global.R")
 
 ##                                     # Init DB using credentials data
@@ -20,10 +21,15 @@ create_db(
     passphrase = "passphrase_wihtout_keyring"
 )
 
-run_login <- function(wifi = FALSE)
+run_login <- function(wifi = FALSE,init_fake = TRUE)
 {
-
-  source("./global.R")
+  if (init_fake){
+    source("./init.r")
+  } else {
+    source("./global.R")
+    create_all_table()
+    create_all_views()
+  }
 
   # Wrap your UI with secure_app, enabled admin mode or not
   ui <- secure_app(module_ui, enable_admin = TRUE)
@@ -43,7 +49,7 @@ run_login <- function(wifi = FALSE)
     runApp(list(ui = ui, server = server),
            launch.browser = TRUE,
            port = getOption ("shiny.port",8080),
-           host = getOption("shiny.host", "127.0.0.1"))
+           host = getOption("shiny.host", "0.0.0.0"))
   } else {
     shinyApp(ui, server)
   }}

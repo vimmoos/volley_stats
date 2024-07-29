@@ -1,0 +1,29 @@
+services:
+      db:
+        image: mariadb
+        ports:
+          - 3306:3306
+        environment:
+          - MYSQL_ROOT_PASSWORD=test
+          - MYSQL_PASSWORD=test
+          - MYSQL_DATABASE=volley
+        volumes:
+          - mariadb_data:/var/lib/mysql
+        hostname: db
+
+      r-app:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        ports:
+          - "8080:8080"
+        environment:
+          DB_HOST: db
+          DB_USER: root
+          DB_PASSWORD: '"test"'
+          DB_NAME: '"volley"'
+
+
+
+volumes:
+  mariadb_data:
