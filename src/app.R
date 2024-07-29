@@ -23,10 +23,14 @@ create_db(
 
 run_login <- function(wifi = FALSE,init_fake = TRUE)
 {
+  source("./global.R")
   if (init_fake){
-    source("./init.r")
+    startup()
+    tables_ <- length(dbGetQuery(R_CON_DB,"show tables;")[['Tables_in_"volley"']])
+    if(tables_ < 2){
+      source("./init.r")
+    }
   } else {
-    source("./global.R")
     create_all_table()
     create_all_views()
   }
